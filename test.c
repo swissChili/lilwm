@@ -1,6 +1,7 @@
 #include <X11/Xlib.h>
 #include <stdio.h>
 #include <lilui.h>
+#include <stdbool.h>
 #include <stdlib.h>
 
 void draw(ui_ctx_t *ctx)
@@ -25,7 +26,8 @@ void draw(ui_ctx_t *ctx)
 	if (ui_widgetclicked(txt))
 	{
 		msg = "Clicked!";
-		ctx->should_update = 1;
+		// fine
+		ctx->should_update = true;
 	}
 }
 

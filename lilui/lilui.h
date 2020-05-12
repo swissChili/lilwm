@@ -33,7 +33,7 @@ typedef struct ui_widget_t
 	/**
 	 * Destructor
 	 */
-	void (*del)(struct ui_widget_t);
+	void (*del)(void *);
 } ui_widget_t;
 
 typedef struct ui_row_t
@@ -47,10 +47,17 @@ typedef struct ui_window_t
 	Window win;
 	Display *dpy;
 	int scr;
+	XIM im;
+	XIC ic;
 } ui_window_t;
 
 typedef struct ui_mouseevent_t
 {
+	enum
+	{
+		UI_MOUSE_DOWN,
+		UI_MOUSE_UP,
+	} evt;
 	enum
 	{
 		UI_EVT_NONE = 0,
@@ -59,6 +66,16 @@ typedef struct ui_mouseevent_t
 	} type;
 	int x, y;
 } ui_mouseevent_t;
+
+typedef struct ui_keyevent_t
+{
+	enum
+	{
+		UI_KEY_PRESSED,
+	} type;
+	unsigned int keysym;
+	char *str;
+} ui_keyevent_t;
 
 typedef struct ui_ctx_t
 {

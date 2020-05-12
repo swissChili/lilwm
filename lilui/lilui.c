@@ -1,15 +1,23 @@
-#include <string.h>
-#include <stdio.h>
 #include "lilui.h"
+#include <stdio.h>
+#include <string.h>
 
-static Display	*g_d;
-static Window	g_w;
-static int		g_s;
-static GC		g_gc;
-static ui_row_t	g_row;
+#define NEW(x) (calloc(sizeof(x), 1))
+#define BUF_MAX_LEN 32
 
-static int		g_x = 0;
-static int		g_y = 0;
+static ui_window_t g_win;
+static Display *g_d;
+static Window g_w;
+static int g_s;
+static GC g_gc;
+static ui_row_t g_row;
+
+static int g_x = 0;
+static int g_y = 0;
+
+// buffer pointer
+static char g_buf[BUF_MAX_LEN];
+static int g_buflen = 0;
 
 static ui_mouseevent_t g_evt;
 
@@ -31,6 +39,8 @@ void ui_setwindow(ui_window_t win)
 	g_w = win.win;
 	g_d = win.dpy;
 	g_s = win.scr;
+	g_win = win;
+	XSetICFocus(win.ic);
 	XMapWindow(g_d, g_w);
 }
 
@@ -39,8 +49,9 @@ ui_window_t ui_window()
 	ui_window_t win;
 	Display *dpy = XOpenDisplay(NULL);
 	int scr = DefaultScreen(dpy);
-	Window w = XCreateSimpleWindow(dpy, RootWindow(dpy, scr), 10, 10, 100, 100, 1,
-						BlackPixel(dpy, scr), WhitePixel(dpy, scr));
+	Window w =
+		XCreateSimpleWindow(dpy, RootWindow(dpy, scr), 10, 10, 100, 100, 1,
+							BlackPixel(dpy, scr), WhitePixel(dpy, scr));
 	if (dpy == NULL)
 	{
 		fprintf(stderr, "Could not open X display\n");
@@ -49,6 +60,11 @@ ui_window_t ui_window()
 	win.dpy = dpy;
 	win.scr = scr;
 	win.win = w;
+
+	win.im = XOpenIM(dpy, NULL, NULL, NULL);
+	win.ic =
+		XCreateIC(win.im, XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
+				  XNClientWindow, w, NULL);
 
 	return win;
 }
@@ -65,6 +81,13 @@ void ui_fg3(unsigned char r, unsigned char g, unsigned char b)
 
 void ui_row()
 {
+	for (int i = 0; i < g_row.len; i++)
+	{
+		if (g_row.wdgts[i].data && g_row.wdgts[i].del)
+		{
+			g_row.wdgts[i].del(g_row.wdgts[i].data);
+		}
+	}
 	g_row.len = 0;
 }
 
@@ -75,7 +98,7 @@ ui_widget_t ui_dynsz(ui_widget_t w, int fw, int fh, int *max_h)
 
 	if (w.w < 0)
 		w.w = fw * (-w.w);
-	
+
 	if (w.h < 0)
 		w.h = fh * (-w.h);
 
@@ -87,39 +110,44 @@ ui_widget_t ui_dynsz(ui_widget_t w, int fw, int fh, int *max_h)
 
 int ui_widgetclicked(int i)
 {
-	if (i >= g_row.len) return 0;
+	if (i >= g_row.len)
+		return 0;
 	return ui_isclicked(g_row.wdgts[i]);
 }
 
 int ui_isclicked(ui_widget_t w)
 {
-	int l = w.x,
-		r = w.x + w.w,
-		t = w.y,
-		b = w.y + w.h;
+	int l = w.x, r = w.x + w.w, t = w.y, b = w.y + w.h;
 
-	if (g_evt.type) printf("evt %d at %d, %d\n", g_evt.type, g_evt.x, g_evt.y);
-	printf("l r t b %d %d %d %d\n", l, r, t, b);
+	if (g_evt.type)
+		printf("evt %d at %d, %d\n", g_evt.type, g_evt.x, g_evt.y);
+	// printf("l r t b %d %d %d %d\n", l, r, t, b);
 
 	if (g_evt.type == UI_EVT_CLICK)
 	{
-		return g_evt.x >= l && g_evt.x <= r &&
-				g_evt.y >= t && g_evt.y <= b;
+		return g_evt.x >= l && g_evt.x <= r && g_evt.y >= t && g_evt.y <= b;
 	}
-	else return 0;
+	else
+		return 0;
+}
+
+int ui_clickedoff(ui_widget_t w)
+{
+	if (!g_evt.type)
+		return 0;
+	
+	return !ui_isclicked(w);
 }
 
 void ui_pack()
 {
 	XWindowAttributes a;
 	XGetWindowAttributes(g_d, g_w, &a);
-	int w = a.width,
-		h = a.height,
-		w_w = 0, // combined width of all widgets
-		w_h = 0, // combined height of all widgets
+	int w = a.width, h = a.height,
+		w_w = 0,		// combined width of all widgets
+		w_h = 0,		// combined height of all widgets
 		flex_num_w = 0, // proportional flexible space
-		flex_num_h = 0,
-		max_h = 0;
+		flex_num_h = 0, max_h = 0;
 
 	for (int i = 0; i < g_row.len; i++)
 	{
@@ -136,7 +164,7 @@ void ui_pack()
 	// flexible space
 	int flex_w = flex_num_w ? (w - w_w) / flex_num_w : 0,
 		flex_h = flex_num_h ? (h - w_h) / flex_num_h : 0;
-	
+
 	for (int i = 0; i < g_row.len; i++)
 	{
 		g_row.wdgts[i] = ui_dynsz(g_row.wdgts[i], flex_w, flex_h, &max_h);
@@ -145,7 +173,7 @@ void ui_pack()
 
 	g_x = 0;
 	g_y += max_h;
-	//printf("Packed, y is now %d\n", g_y);
+	// printf("Packed, y is now %d\n", g_y);
 }
 
 int ui_add(ui_widget_t w)
@@ -162,7 +190,7 @@ void ui_clear(unsigned long color)
 
 void ui_redraw(ui_rendererloop_t rl)
 {
-	ui_ctx_t ctx = { 0 };
+	ui_ctx_t ctx = {0};
 	do
 	{
 		ui_clear(RGB(255, 255, 255));
@@ -170,8 +198,7 @@ void ui_redraw(ui_rendererloop_t rl)
 		ui_start();
 		rl(&ctx);
 		g_evt.type = UI_EVT_NONE;
-	}
-	while (ctx.should_update);
+	} while (ctx.should_update);
 }
 
 void ui_loop(ui_rendererloop_t rl)
@@ -183,16 +210,60 @@ void ui_loop(ui_rendererloop_t rl)
 		g_evt.type = UI_EVT_NONE;
 
 		XNextEvent(g_d, &e);
+		if (XFilterEvent(&e, g_w))
+			continue;
+
 		if (e.type == Expose)
 		{
 			ui_redraw(rl);
 		}
-		if (e.type == ButtonPress)
+		else if (e.type == MappingNotify)
 		{
-			printf("Button pressed %d\n", e.xbutton.button);
-			int x = e.xbutton.x,
-				y = e.xbutton.y;
+			XRefreshKeyboardMapping(&e.xmapping);
+		}
+		else if (e.type == KeyPress)
+		{
+			KeySym keysym = 0;
+			Status status = 0;
+			g_buflen = Xutf8LookupString(g_win.ic, (XKeyPressedEvent*)&e, g_buf, 20, &keysym, &status);
+
+			if (status == XBufferOverflow)
+			{
+				printf("Buffer overflow");
+			}
+			if (g_buflen)
+			{
+				//printf("Buffer %.*s\n", g_buflen, g_buf);
+			}
+			if (status == XLookupKeySym || status == XLookupBoth)
+			{
+				printf("Status: %d\n", status);
+			}
+			printf("Pressed key %lu\n", keysym);
+
+			ui_redraw(rl);
+		}
+		else if (e.type == ButtonPress)
+		{
+			if (e.xbutton.button >= 1 && e.xbutton.button <= 3)
+			{
+				printf("Mouse clicked %d\n", e.xbutton.button);
+				int x = e.xbutton.x, y = e.xbutton.y;
+				g_evt = (ui_mouseevent_t){
+					.evt = UI_MOUSE_DOWN,
+					.type = e.xbutton.button,
+					.x = x,
+					.y = y,
+				};
+
+				ui_redraw(rl);
+			}
+		}
+		else if (e.type == ButtonRelease)
+		{
+			int x = e.xbutton.x, y = e.xbutton.y;
 			g_evt = (ui_mouseevent_t){
+				.evt = UI_MOUSE_UP,
 				.type = e.xbutton.button,
 				.x = x,
 				.y = y,
@@ -225,7 +296,7 @@ ui_widget_t ui_rect(int w, int h)
 void ui_bldtext(ui_widget_t t)
 {
 	ui_fg(t.color);
-	//printf("Drawing text %s at %d, %d\n", t.data, t.x, t.y);
+	// printf("Drawing text %s at %d, %d\n", t.data, t.x, t.y);
 	XDrawString(g_d, g_w, g_gc, t.x, t.y + 20, t.data, strlen(t.data));
 }
 
@@ -262,26 +333,17 @@ ui_widget_t ui_btn(char *text)
 void ui_bldnothing(ui_widget_t w)
 {
 	// do nothing!
+	printf("The buffer is %.*s\n", g_buflen, g_buf);
 }
 
 ui_widget_t ui_hspacer(int size)
 {
 	return (ui_widget_t){
-		.x = -1,
-		.y = -1,
-		.w = size,
-		.h = 1,
-		.bld = ui_bldnothing
-	};
+		.x = -1, .y = -1, .w = size, .h = 1, .bld = ui_bldnothing};
 }
 
 ui_widget_t ui_vspacer(int size)
 {
 	return (ui_widget_t){
-		.x = -1,
-		.y = -1,
-		.w = 1,
-		.h = size,
-		.bld = ui_bldnothing
-	};
+		.x = -1, .y = -1, .w = 1, .h = size, .bld = ui_bldnothing};
 }
