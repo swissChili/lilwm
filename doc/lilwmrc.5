@@ -1,0 +1,44 @@
+.TH man 5 "11 May 2020" "1.0" "lilwm config file man page"
+
+.SH NAME
+lilwmrc \- lilwm config file
+
+.SH DESCRIPTION
+A lilwmrc file defines the functionality of lilwm.
+This includes, but is not limited to, key bindings, default applications,
+and graphical settings.
+
+By default, lilwm reads its config from /etc/lilwm/lilwmrc.
+A different file can be provided as the first argument to lilwm.
+
+.SH FORMAT
+lilwmrc files use a simple key-value format (conveniently called Keyvalues).
+A key is either a double-quoted string ("like this"), or an unquoted identifier.
+Unquoted keys must be valid C identifiers (like_this).
+
+Values are either strings or sub-objects.
+Sub-objects consist of zero or more key-value pairs surrounded by currly braces
+({ like this }).
+
+.SH FIELDS
+.IP * 2
+keys \- sub-object containing key bindings
+.RS 2
+.IP * 2
+Each key in the sub-object corresponds to an X11 key name.
+The value is the lilwm command to run. 
+See lilwm(1).
+.RE
+.IP * 2
+apps \- default applications
+.RS 2
+.IP * 2
+terminal \- default terminal emulator to open with `newterm' command
+.IP * 2
+autorun \- commands to run at startup
+
+.SH SEE ALSO
+lilwm(1)
+
+.SH AUTHOR
+swissChili (swisschili.sh, github.com/swissChili)
