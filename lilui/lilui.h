@@ -28,6 +28,12 @@ typedef struct ui_widget_t
 	 * Function pointer to build (draw) this widget.
 	 */
 	void (*bld)(struct ui_widget_t);
+	// color
+	unsigned long color;
+	/**
+	 * Destructor
+	 */
+	void (*del)(struct ui_widget_t);
 } ui_widget_t;
 
 typedef struct ui_row_t
@@ -54,7 +60,12 @@ typedef struct ui_mouseevent_t
 	int x, y;
 } ui_mouseevent_t;
 
-typedef void (* ui_rendererloop_t)(void);
+typedef struct ui_ctx_t
+{
+	int should_update;
+} ui_ctx_t;
+
+typedef void (* ui_rendererloop_t)(ui_ctx_t *);
 
 ui_window_t ui_window();
 void ui_setwindow(ui_window_t win);
@@ -66,7 +77,11 @@ void ui_pack();
 int ui_isclicked(ui_widget_t w);
 int ui_widgetclicked(int i);
 int ui_add(ui_widget_t w);
+void ui_clear(unsigned long color);
 // widgets
+ui_widget_t ui_rectc(int w, int h, long color);
 ui_widget_t ui_rect(int w, int h);
 ui_widget_t ui_text(char *text);
 ui_widget_t ui_btn(char *text);
+ui_widget_t ui_hspacer(int size);
+ui_widget_t ui_vspacer(int size);

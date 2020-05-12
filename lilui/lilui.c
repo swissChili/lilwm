@@ -53,7 +53,12 @@ ui_window_t ui_window()
 	return win;
 }
 
-void ui_fg(unsigned char r, unsigned char g, unsigned char b)
+void ui_fg(unsigned long color)
+{
+	XSetForeground(g_d, g_gc, color);
+}
+
+void ui_fg3(unsigned char r, unsigned char g, unsigned char b)
 {
 	XSetForeground(g_d, g_gc, RGB(r, g, b));
 }
@@ -149,6 +154,26 @@ int ui_add(ui_widget_t w)
 	return g_row.len++;
 }
 
+void ui_clear(unsigned long color)
+{
+	ui_fg(color);
+	XClearWindow(g_d, g_w);
+}
+
+void ui_redraw(ui_rendererloop_t rl)
+{
+	ui_ctx_t ctx = { 0 };
+	do
+	{
+		ui_clear(RGB(255, 255, 255));
+		ctx.should_update = 0;
+		ui_start();
+		rl(&ctx);
+		g_evt.type = UI_EVT_NONE;
+	}
+	while (ctx.should_update);
+}
+
 void ui_loop(ui_rendererloop_t rl)
 {
 	ui_init();
@@ -156,15 +181,12 @@ void ui_loop(ui_rendererloop_t rl)
 	while (1)
 	{
 		g_evt.type = UI_EVT_NONE;
-		ui_start();
 
 		XNextEvent(g_d, &e);
 		if (e.type == Expose)
 		{
-			rl();
+			ui_redraw(rl);
 		}
-		if (e.type == KeyPress)
-			break;
 		if (e.type == ButtonPress)
 		{
 			printf("Button pressed %d\n", e.xbutton.button);
@@ -176,7 +198,7 @@ void ui_loop(ui_rendererloop_t rl)
 				.y = y,
 			};
 
-			rl();
+			ui_redraw(rl);
 		}
 	}
 	XCloseDisplay(g_d);
@@ -184,7 +206,7 @@ void ui_loop(ui_rendererloop_t rl)
 
 void ui_bldrect(ui_widget_t w)
 {
-	ui_fg(200, 200, 200);
+	ui_fg(w.color);
 	XFillRectangle(g_d, g_w, g_gc, w.x, w.y, w.w, w.h);
 }
 
@@ -195,14 +217,14 @@ ui_widget_t ui_rect(int w, int h)
 		.y = -1,
 		.w = w,
 		.h = h,
-		.data = NULL,
+		.color = RGB(0, 0, 20),
 		.bld = ui_bldrect,
 	};
 }
 
 void ui_bldtext(ui_widget_t t)
 {
-	ui_fg(0, 0, 0);
+	ui_fg(t.color);
 	//printf("Drawing text %s at %d, %d\n", t.data, t.x, t.y);
 	XDrawString(g_d, g_w, g_gc, t.x, t.y + 20, t.data, strlen(t.data));
 }
@@ -214,6 +236,7 @@ ui_widget_t ui_text(char *text)
 		.y = -1,
 		.w = strlen(text) * 6, // TODO: make less shit
 		.h = 32,
+		.color = RGB(0, 0, 0),
 		.data = (void *)text,
 		.bld = ui_bldtext,
 	};
@@ -221,9 +244,10 @@ ui_widget_t ui_text(char *text)
 
 void ui_bldbtn(ui_widget_t b)
 {
-	ui_fg(206, 206, 229);
+	b.color = RGB(50, 154, 229);
 	ui_bldrect(b);
 	b.x += 8;
+	b.color = RGB(255, 255, 255);
 	ui_bldtext(b);
 }
 
@@ -233,4 +257,31 @@ ui_widget_t ui_btn(char *text)
 	t.w += 16;
 	t.bld = ui_bldbtn;
 	return t;
+}
+
+void ui_bldnothing(ui_widget_t w)
+{
+	// do nothing!
+}
+
+ui_widget_t ui_hspacer(int size)
+{
+	return (ui_widget_t){
+		.x = -1,
+		.y = -1,
+		.w = size,
+		.h = 1,
+		.bld = ui_bldnothing
+	};
+}
+
+ui_widget_t ui_vspacer(int size)
+{
+	return (ui_widget_t){
+		.x = -1,
+		.y = -1,
+		.w = 1,
+		.h = size,
+		.bld = ui_bldnothing
+	};
 }

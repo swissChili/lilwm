@@ -3,22 +3,29 @@
 #include <lilui.h>
 #include <stdlib.h>
 
-void draw()
+void draw(ui_ctx_t *ctx)
 {
+	static char *msg = "Not clicked";
 	ui_row();
-	ui_add(ui_rect(100, 100));
-	ui_add(ui_text("Hello"));
-	ui_add(ui_rect(100, 32));
+	ui_add(ui_vspacer(100));
 	ui_pack();
 
 	ui_row();
-	//ui_add(ui_rect(-1, 32));
-	int txt = ui_add(ui_btn("Hmm, yess... this is a large text"));
+	ui_add(ui_hspacer(-1));
+	ui_add(ui_text(msg));
+	ui_add(ui_hspacer(-1));
+	ui_pack();
+
+	ui_row();
+	ui_add(ui_hspacer(-1));
+	int txt = ui_add(ui_btn("Click me!!"));
+	ui_add(ui_hspacer(-1));
 	ui_pack();
 
 	if (ui_widgetclicked(txt))
 	{
-		printf("text clicked\n");
+		msg = "Clicked!";
+		ctx->should_update = 1;
 	}
 }
 
