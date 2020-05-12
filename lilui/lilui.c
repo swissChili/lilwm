@@ -364,36 +364,37 @@ ui_widget_t ui_vspacer(int size)
 		.x = -1, .y = -1, .w = 1, .h = size, .bld = ui_bldnothing};
 }
 
-typedef struct ui_inputstr_data_t
+static ui_inputstr_data_t ui_inputstr_data()
 {
-	char **text;
-	int len;
-	int *focused;
-	int *cursor;
-} ui_inputstr_data_t;
+	return (ui_inputstr_data_t){
+		.len = UI_MAX_INPUTSTR_LEN,
+		.cursor = 0,
+		.focused = 0,
+	};
+}
 
 void ui_bldinputstr(ui_widget_t i)
 {;
 	ui_inputstr_data_t *d = (ui_inputstr_data_t *)i.data;
-	printf("Currnet focus is %d\n", *d->focused);
+	printf("Currnet focus is %d\n", d->focused);
 	if (ui_isclicked(i))
 	{
 		printf("Focused ui_inputstr\n");
-		*d->focused = 1;
+		d->focused = 1;
 	}
 	if (ui_clickedoff(i))
 	{
 		printf("Clicked off ui_inputstr\n");
-		*d->focused = 0;
+		d->focused = 0;
 	}
-	if (*d->focused && g_buflen)
+	if (d->focused && g_buflen)
 	{
 		if (d->len > strlen(d->text) + g_buflen)
 		{
 			printf("appending to buffer %.*s\n", g_buflen, g_buf);
 			g_buf[g_buflen] = 0;
 			printf("buf is %s, %s\n", g_buf, d->text);
-			d->text = strncat(d->text, g_buf, g_buflen);
+			strncat(d->text, g_buf, g_buflen);
 		}
 		else
 			printf("ui_inputstr buffer overflow\n");
@@ -407,7 +408,7 @@ void ui_bldinputstr(ui_widget_t i)
 	i.data = d->text;
 	ui_bldtext(i);
 	// draw a little cursor
-	if (*d->focused)
+	if (d->focused)
 	{
 		ui_widget_t cursorw = ui_rect4(i.x + 6 * strlen(i.data), i.y + 10, 2, 12);
 		cursorw.color = RGB(0, 0, 0);
@@ -415,21 +416,14 @@ void ui_bldinputstr(ui_widget_t i)
 	}
 }
 
-ui_widget_t ui_inputstr(char **text, int *focused, int *cursor, int len, int wlen)
+ui_widget_t ui_inputstr(ui_inputstr_data_t *data, int wlen)
 {
-	ui_inputstr_data_t *d = NEW(ui_inputstr_data_t);
-	d->text = text;
-	d->len = len;
-	d->focused = focused;
-	d->cursor = cursor;
-
 	return (ui_widget_t){
 		.x = -1,
 		.y = -1,
 		.w = wlen,
 		.h = 32,
 		.bld = ui_bldinputstr,
-		.data = d,
-		.del = free,
+		.data = data,
 	};
 }

@@ -10,9 +10,10 @@ void draw(ui_ctx_t *ctx)
 	static char input[128] = "hi";
 	static int focused = 0;
 	static int cursor = 2;
-	
+	static ui_inputstr_data_t data = UI_INPUTSTR_DATA();
+
 	ui_row();
-	ui_add(ui_inputstr((char **)&input, &focused, &cursor, 128, -1));
+	ui_add(ui_inputstr(&data, -1));
 	ui_pack();
 
 	ui_row();

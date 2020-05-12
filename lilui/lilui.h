@@ -2,8 +2,11 @@
 
 #include <X11/Xlib.h>
 
-#define RGB(r, g, b) (b + (g<<8) + (r<<16))
+#define RGB(r, g, b) (b + (g << 8) + (r << 16))
 #define MAX(a, b) (a > b ? a : b)
+#ifndef UI_MAX_INPUTSTR_LEN
+#define UI_MAX_INPUTSTR_LEN 128
+#endif
 
 // maximum number of widgets per row
 #define UI_MAX_PER_ROW 32
@@ -82,7 +85,17 @@ typedef struct ui_ctx_t
 	int should_update;
 } ui_ctx_t;
 
-typedef void (* ui_rendererloop_t)(ui_ctx_t *);
+typedef struct ui_inputstr_data_t
+{
+	char text[UI_MAX_INPUTSTR_LEN];
+	int len;
+	int focused;
+	int cursor;
+} ui_inputstr_data_t;
+
+#define UI_INPUTSTR_DATA() {.len = UI_MAX_INPUTSTR_LEN}
+
+typedef void (*ui_rendererloop_t)(ui_ctx_t *);
 
 ui_window_t ui_window();
 void ui_setwindow(ui_window_t win);
@@ -101,6 +114,6 @@ ui_widget_t ui_rect4(int x, int y, int w, int h);
 ui_widget_t ui_rect(int w, int h);
 ui_widget_t ui_text(char *text);
 ui_widget_t ui_btn(char *text);
-ui_widget_t ui_inputstr(char **text, int *focused, int *cursor, int len, int widget_len);
+ui_widget_t ui_inputstr(ui_inputstr_data_t *data, int widget_len);
 ui_widget_t ui_hspacer(int size);
 ui_widget_t ui_vspacer(int size);
