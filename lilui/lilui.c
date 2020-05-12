@@ -1,6 +1,7 @@
 #include "lilui.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define NEW(x) (calloc(sizeof(x), 1))
 #define BUF_MAX_LEN 32
@@ -209,6 +210,8 @@ void ui_loop(ui_rendererloop_t rl)
 	{
 		g_evt.type = UI_EVT_NONE;
 
+		g_buflen = 0;
+
 		XNextEvent(g_d, &e);
 		if (XFilterEvent(&e, g_w))
 			continue;
@@ -293,11 +296,24 @@ ui_widget_t ui_rect(int w, int h)
 	};
 }
 
+ui_widget_t ui_rect4(int x, int y, int w, int h)
+{
+	return (ui_widget_t){
+		.x = x,
+		.y = y,
+		.w = w,
+		.h = h,
+		.color = RGB(0, 0, 20),
+		.bld = ui_bldrect,
+	};
+}
+
 void ui_bldtext(ui_widget_t t)
 {
 	ui_fg(t.color);
+	char *s = t.data;
 	// printf("Drawing text %s at %d, %d\n", t.data, t.x, t.y);
-	XDrawString(g_d, g_w, g_gc, t.x, t.y + 20, t.data, strlen(t.data));
+	XDrawString(g_d, g_w, g_gc, t.x, t.y + 20, s, strlen(s));
 }
 
 ui_widget_t ui_text(char *text)
@@ -346,4 +362,74 @@ ui_widget_t ui_vspacer(int size)
 {
 	return (ui_widget_t){
 		.x = -1, .y = -1, .w = 1, .h = size, .bld = ui_bldnothing};
+}
+
+typedef struct ui_inputstr_data_t
+{
+	char **text;
+	int len;
+	int *focused;
+	int *cursor;
+} ui_inputstr_data_t;
+
+void ui_bldinputstr(ui_widget_t i)
+{;
+	ui_inputstr_data_t *d = (ui_inputstr_data_t *)i.data;
+	printf("Currnet focus is %d\n", *d->focused);
+	if (ui_isclicked(i))
+	{
+		printf("Focused ui_inputstr\n");
+		*d->focused = 1;
+	}
+	if (ui_clickedoff(i))
+	{
+		printf("Clicked off ui_inputstr\n");
+		*d->focused = 0;
+	}
+	if (*d->focused && g_buflen)
+	{
+		if (d->len > strlen(d->text) + g_buflen)
+		{
+			printf("appending to buffer %.*s\n", g_buflen, g_buf);
+			g_buf[g_buflen] = 0;
+			printf("buf is %s, %s\n", g_buf, d->text);
+			d->text = strncat(d->text, g_buf, g_buflen);
+		}
+		else
+			printf("ui_inputstr buffer overflow\n");
+	}
+
+	puts("setting rect color");
+	i.color = RGB(220, 250, 250);
+	ui_bldrect(i);
+	i.x += 8;
+	i.color = RGB(0, 0, 0);
+	i.data = d->text;
+	ui_bldtext(i);
+	// draw a little cursor
+	if (*d->focused)
+	{
+		ui_widget_t cursorw = ui_rect4(i.x + 6 * strlen(i.data), i.y + 10, 2, 12);
+		cursorw.color = RGB(0, 0, 0);
+		cursorw.bld(cursorw);
+	}
+}
+
+ui_widget_t ui_inputstr(char **text, int *focused, int *cursor, int len, int wlen)
+{
+	ui_inputstr_data_t *d = NEW(ui_inputstr_data_t);
+	d->text = text;
+	d->len = len;
+	d->focused = focused;
+	d->cursor = cursor;
+
+	return (ui_widget_t){
+		.x = -1,
+		.y = -1,
+		.w = wlen,
+		.h = 32,
+		.bld = ui_bldinputstr,
+		.data = d,
+		.del = free,
+	};
 }

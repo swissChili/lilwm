@@ -97,8 +97,10 @@ int ui_add(ui_widget_t w);
 void ui_clear(unsigned long color);
 // widgets
 ui_widget_t ui_rectc(int w, int h, long color);
+ui_widget_t ui_rect4(int x, int y, int w, int h);
 ui_widget_t ui_rect(int w, int h);
 ui_widget_t ui_text(char *text);
 ui_widget_t ui_btn(char *text);
+ui_widget_t ui_inputstr(char **text, int *focused, int *cursor, int len, int widget_len);
 ui_widget_t ui_hspacer(int size);
 ui_widget_t ui_vspacer(int size);

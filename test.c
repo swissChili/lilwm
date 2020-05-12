@@ -7,8 +7,12 @@
 void draw(ui_ctx_t *ctx)
 {
 	static char *msg = "Not clicked";
+	static char input[128] = "hi";
+	static int focused = 0;
+	static int cursor = 2;
+	
 	ui_row();
-	ui_add(ui_vspacer(100));
+	ui_add(ui_inputstr((char **)&input, &focused, &cursor, 128, -1));
 	ui_pack();
 
 	ui_row();
