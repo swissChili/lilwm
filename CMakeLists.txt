@@ -7,7 +7,8 @@ subdirs(fastkv)
 
 add_library(lilui
 	lilui/lilui.h
-	lilui/lilui.c)
+	lilui/lilui.c
+	lilui/widgets.c)
 target_link_libraries(lilui X11)
 
 add_executable(testlilui

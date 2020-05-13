@@ -16,6 +16,9 @@
 // maximum number of windows
 #define UI_MAX_WINDOWS 12
 
+// maximum number of qued X11 keystrokes
+#define UI_MAX_BUF_LEN 8
+
 typedef struct ui_mouseevent_t
 {
 	enum
@@ -98,6 +101,9 @@ typedef struct ui_window_t
 	ui_row_t row;
 	int x, y;
 	bool should_update;
+	char buf[UI_MAX_BUF_LEN];
+	int buflen;
+	KeySym keysym;
 } ui_window_t;
 
 typedef struct ui_ctx_t
