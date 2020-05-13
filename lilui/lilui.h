@@ -111,6 +111,7 @@ typedef struct ui_ctx_t
 	int should_update;
 } ui_ctx_t;
 
+// widget data structs
 typedef struct ui_inputstr_data_t
 {
 	char text[UI_MAX_INPUTSTR_LEN];
@@ -119,7 +120,10 @@ typedef struct ui_inputstr_data_t
 	int cursor;
 } ui_inputstr_data_t;
 
-#define UI_INPUTSTR_DATA() {.len = UI_MAX_INPUTSTR_LEN}
+#define UI_INPUTSTR_DATA()                                                     \
+	{                                                                          \
+		.len = UI_MAX_INPUTSTR_LEN                                             \
+	}
 
 typedef void (*ui_rendererloop_t)(ui_window_t *);
 
@@ -140,6 +144,7 @@ ui_widget_t ui_rect4(int x, int y, int w, int h);
 ui_widget_t ui_rect(int w, int h);
 ui_widget_t ui_text(char *text);
 ui_widget_t ui_btn(char *text);
+ui_widget_t ui_progressbar(double *progress, int wlen);
 ui_widget_t ui_inputstr(ui_inputstr_data_t *data, int widget_len);
 ui_widget_t ui_hspacer(int size);
 ui_widget_t ui_vspacer(int size);

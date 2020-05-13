@@ -85,7 +85,8 @@ void ui_row(ui_window_t *win)
 	win->row.len = 0;
 }
 
-ui_widget_t ui_dynsz(ui_window_t *win, ui_widget_t w, int fw, int fh, int *max_h)
+ui_widget_t ui_dynsz(ui_window_t *win, ui_widget_t w, int fw, int fh,
+					 int *max_h)
 {
 	w.x = win->x;
 	w.y = win->y;
@@ -119,7 +120,8 @@ int ui_isclicked(ui_window_t *win, ui_widget_t w)
 
 	if (win->evt.type == UI_EVT_CLICK)
 	{
-		return win->evt.x >= l && win->evt.x <= r && win->evt.y >= t && win->evt.y <= b;
+		return win->evt.x >= l && win->evt.x <= r && win->evt.y >= t &&
+			   win->evt.y <= b;
 	}
 	else
 		return 0;
@@ -217,8 +219,8 @@ int ui_windowevent(XEvent e, ui_window_t *win, ui_rendererloop_t rl)
 		}
 
 		Status status = 0;
-		win->buflen = Xutf8LookupString(win->ic, (XKeyPressedEvent *)&e, win->buf, 20,
-									 &win->keysym, &status);
+		win->buflen = Xutf8LookupString(win->ic, (XKeyPressedEvent *)&e,
+										win->buf, 20, &win->keysym, &status);
 
 		char *keystr = XKeysymToString(win->keysym);
 

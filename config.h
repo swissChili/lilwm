@@ -1,13 +1,13 @@
 #ifndef LILWM_CONFIG_H
 #define LILWM_CONFIG_H
 
-#include <stdlib.h>
 #include <fastkv.h>
+#include <stdlib.h>
 
 struct config
 {
-    item_t p;
-    char *data;
+	item_t p;
+	char *data;
 };
 
 struct config parsefile();

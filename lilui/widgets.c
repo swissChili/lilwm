@@ -2,7 +2,6 @@
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 
-
 void ui_bldrect(ui_window_t *win, ui_widget_t w)
 {
 	ui_fg(win, w.color);
@@ -176,5 +175,30 @@ ui_widget_t ui_inputstr(ui_inputstr_data_t *data, int wlen)
 		.h = 32,
 		.bld = ui_bldinputstr,
 		.data = data,
+	};
+}
+
+void ui_bldprogressbar(ui_window_t *win, ui_widget_t b)
+{
+	b.color = RGB(42, 48, 48);
+	ui_bldrect(win, b);
+
+	double progress = *(double *)b.data;
+	int width = MIN(b.w, b.w * progress);
+	printf("progress bar at %f (%d)\n", progress, width);
+	b.w = width;
+	b.color = RGB(9, 145, 150);
+	ui_bldrect(win, b);
+}
+
+ui_widget_t ui_progressbar(double *progress, int wlen)
+{
+	return (ui_widget_t){
+		.x = -1,
+		.y = -1,
+		.w = wlen,
+		.h = 32,
+		.bld = ui_bldprogressbar,
+		.data = progress,
 	};
 }
