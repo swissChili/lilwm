@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <X11/keysym.h>
 
 #define NEW(x) (calloc(sizeof(x), 1))
 #define BUF_MAX_LEN 32
@@ -380,6 +381,7 @@ void ui_bldinputstr(ui_widget_t i)
 {;
 	ui_inputstr_data_t *d = (ui_inputstr_data_t *)i.data;
 	printf("Currnet focus is %d\n", d->focused);
+	printf("keysym: %d, Left: %d\n", g_keysym, XK_Left);
 	if (ui_isclicked(i))
 	{
 		printf("Focused ui_inputstr\n");
@@ -390,30 +392,41 @@ void ui_bldinputstr(ui_widget_t i)
 		printf("Clicked off ui_inputstr\n");
 		d->focused = 0;
 	}
-	if (d->focused && g_buflen)
+	if (d->focused)
 	{
-		printf("keysym: %d, Left: %d\n", g_keysym, XStringToKeysym("Left"));
-		if (g_keysym == XStringToKeysym("BackSpace"))
+		if (g_keysym == XK_BackSpace)
 		{
-			printf("BackSpace pressed, '%s' %d\n", d->text, strlen(d->text));
 			if (strlen(d->text) > 0)
 			{
-				d->text[strlen(d->text) - 1] = 0;
+				memmove(&d->text[d->cursor - 1], &d->text[d->cursor], strlen(d->text) - (d->cursor-1));
 				d->cursor--;
 			}
 		}
-		else if (g_keysym == XStringToKeysym("Left"))
+		else if (g_keysym == XK_Delete)
+		{
+			printf("Deleting\n");
+			memmove(&d->text[d->cursor], &d->text[d->cursor + 1], strlen(d->text) - d->cursor);
+		}
+		else if (g_keysym == XK_Left)
 		{
 			printf("Cursor Left %d\n", d->cursor);
 			if (d->cursor > 0)
 				d->cursor--;
 		}
-		else if (g_keysym == XStringToKeysym("Right"))
+		else if (g_keysym == XK_Right)
 		{
 			if (d->cursor < strlen(d->text))
 				d->cursor++;
 		}
-		else if (d->len > strlen(d->text) + g_buflen)
+		else if (g_keysym == XK_Up)
+		{
+			d->cursor = 0;
+		}
+		else if (g_keysym == XK_Down)
+		{
+			d->cursor = strlen(d->text);
+		}
+		else if (g_buflen && d->len > strlen(d->text) + g_buflen)
 		{
 			printf("appending to buffer %.*s\n", g_buflen, g_buf);
 			g_buf[g_buflen] = 0;
