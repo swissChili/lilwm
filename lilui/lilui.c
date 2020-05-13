@@ -19,6 +19,7 @@ static int g_y = 0;
 // buffer pointer
 static char g_buf[BUF_MAX_LEN];
 static int g_buflen = 0;
+static KeySym g_keysym = 0;
 
 static ui_mouseevent_t g_evt;
 
@@ -211,6 +212,7 @@ void ui_loop(ui_rendererloop_t rl)
 		g_evt.type = UI_EVT_NONE;
 
 		g_buflen = 0;
+		g_keysym = 0;
 
 		XNextEvent(g_d, &e);
 		if (XFilterEvent(&e, g_w))
@@ -226,9 +228,10 @@ void ui_loop(ui_rendererloop_t rl)
 		}
 		else if (e.type == KeyPress)
 		{
-			KeySym keysym = 0;
 			Status status = 0;
-			g_buflen = Xutf8LookupString(g_win.ic, (XKeyPressedEvent*)&e, g_buf, 20, &keysym, &status);
+			g_buflen = Xutf8LookupString(g_win.ic, (XKeyPressedEvent*)&e, g_buf, 20, &g_keysym, &status);
+
+			char *keystr = XKeysymToString(g_keysym);
 
 			if (status == XBufferOverflow)
 			{
@@ -242,7 +245,7 @@ void ui_loop(ui_rendererloop_t rl)
 			{
 				printf("Status: %d\n", status);
 			}
-			printf("Pressed key %lu\n", keysym);
+			printf("Pressed key %s (%lu)\n", keystr, g_keysym);
 
 			ui_redraw(rl);
 		}
@@ -389,12 +392,34 @@ void ui_bldinputstr(ui_widget_t i)
 	}
 	if (d->focused && g_buflen)
 	{
-		if (d->len > strlen(d->text) + g_buflen)
+		printf("keysym: %d, Left: %d\n", g_keysym, XStringToKeysym("Left"));
+		if (g_keysym == XStringToKeysym("BackSpace"))
+		{
+			printf("BackSpace pressed, '%s' %d\n", d->text, strlen(d->text));
+			if (strlen(d->text) > 0)
+			{
+				d->text[strlen(d->text) - 1] = 0;
+				d->cursor--;
+			}
+		}
+		else if (g_keysym == XStringToKeysym("Left"))
+		{
+			printf("Cursor Left %d\n", d->cursor);
+			if (d->cursor > 0)
+				d->cursor--;
+		}
+		else if (g_keysym == XStringToKeysym("Right"))
+		{
+			if (d->cursor < strlen(d->text))
+				d->cursor++;
+		}
+		else if (d->len > strlen(d->text) + g_buflen)
 		{
 			printf("appending to buffer %.*s\n", g_buflen, g_buf);
 			g_buf[g_buflen] = 0;
 			printf("buf is %s, %s\n", g_buf, d->text);
 			strncat(d->text, g_buf, g_buflen);
+			d->cursor += g_buflen;
 		}
 		else
 			printf("ui_inputstr buffer overflow\n");
@@ -410,7 +435,7 @@ void ui_bldinputstr(ui_widget_t i)
 	// draw a little cursor
 	if (d->focused)
 	{
-		ui_widget_t cursorw = ui_rect4(i.x + 6 * strlen(i.data), i.y + 10, 2, 12);
+		ui_widget_t cursorw = ui_rect4(i.x + 6 * d->cursor, i.y + 10, 2, 12);
 		cursorw.color = RGB(0, 0, 0);
 		cursorw.bld(cursorw);
 	}
