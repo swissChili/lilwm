@@ -15,8 +15,6 @@ static char g_buf[BUF_MAX_LEN];
 static int g_buflen = 0;
 static KeySym g_keysym = 0;
 
-static ui_mouseevent_t g_evt;
-
 void ui_init(ui_window_t *win)
 {
 	win->gc = DefaultGC(win->dpy, win->scr);
@@ -119,13 +117,13 @@ int ui_isclicked(ui_window_t *win, ui_widget_t w)
 {
 	int l = w.x, r = w.x + w.w, t = w.y, b = w.y + w.h;
 
-	if (g_evt.type)
-		printf("evt %d at %d, %d\n", g_evt.type, g_evt.x, g_evt.y);
+	if (win->evt.type)
+		printf("evt %d at %d, %d\n", win->evt.type, win->evt.x, win->evt.y);
 	// printf("l r t b %d %d %d %d\n", l, r, t, b);
 
-	if (g_evt.type == UI_EVT_CLICK)
+	if (win->evt.type == UI_EVT_CLICK)
 	{
-		return g_evt.x >= l && g_evt.x <= r && g_evt.y >= t && g_evt.y <= b;
+		return win->evt.x >= l && win->evt.x <= r && win->evt.y >= t && win->evt.y <= b;
 	}
 	else
 		return 0;
@@ -133,7 +131,7 @@ int ui_isclicked(ui_window_t *win, ui_widget_t w)
 
 int ui_clickedoff(ui_window_t *win, ui_widget_t w)
 {
-	if (!g_evt.type)
+	if (!win->evt.type)
 		return 0;
 
 	return !ui_isclicked(win, w);
@@ -197,7 +195,7 @@ void ui_redraw(ui_window_t *win, ui_rendererloop_t rl)
 		win->should_update = 0;
 		ui_start(win);
 		rl(win);
-		g_evt.type = UI_EVT_NONE;
+		win->evt.type = UI_EVT_NONE;
 	} while (win->should_update);
 }
 
@@ -255,7 +253,7 @@ int ui_windowevent(XEvent e, ui_window_t *win, ui_rendererloop_t rl)
 		{
 			printf("Mouse clicked %d\n", e.xbutton.button);
 			int x = e.xbutton.x, y = e.xbutton.y;
-			g_evt = (ui_mouseevent_t){
+			win->evt = (ui_mouseevent_t){
 				.evt = UI_MOUSE_DOWN,
 				.type = e.xbutton.button,
 				.x = x,
@@ -273,7 +271,7 @@ int ui_windowevent(XEvent e, ui_window_t *win, ui_rendererloop_t rl)
 		}
 
 		int x = e.xbutton.x, y = e.xbutton.y;
-		g_evt = (ui_mouseevent_t){
+		win->evt = (ui_mouseevent_t){
 			.evt = UI_MOUSE_UP,
 			.type = e.xbutton.button,
 			.x = x,
@@ -302,7 +300,7 @@ void ui_loop(ui_rendererloop_t rl)
 		{
 			ui_window_t *win = &g_windows[i];
 
-			g_evt.type = UI_EVT_NONE;
+			win->evt.type = UI_EVT_NONE;
 
 			g_buflen = 0;
 			g_keysym = 0;
