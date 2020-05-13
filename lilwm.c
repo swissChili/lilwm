@@ -1,29 +1,17 @@
+#include "config.h"
 #include <X11/Xlib.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include "config.h"
+#include <unistd.h>
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
-
-void run_cmd(char *cmd)
-{
-	// fork time!1
-	int i = fork();
-	if (i != 0)
-	{
-		// error or parent
-		return;
-	}
-	system(cmd);
-}
 
 #define XKEY(dpy, k) XKeysymToKeycode(dpy, XStringToKeysym(k))
 
 int kv_xkey(Display *dpy, item_t i, char *q, char *undef)
 {
-	return XKEY(dpy, kv_strdefault(i,q, undef));
+	return XKEY(dpy, kv_strdefault(i, q, undef));
 }
 
 int main(int argc, char **argv)
@@ -58,10 +46,9 @@ int main(int argc, char **argv)
 	root = DefaultRootWindow(dpy);
 #else
 	root = XCreateSimpleWindow(dpy, RootWindow(dpy, s), 10, 10, 640, 480, 1,
-						BlackPixel(dpy, s), WhitePixel(dpy, s));
+							   BlackPixel(dpy, s), WhitePixel(dpy, s));
 #endif
 
-	
 	char *termcmd = kv_strdefault(cfg.p, "apps.terminal", "xterm");
 
 	item_t keys = kv_query(cfg.p, "keys");
@@ -80,18 +67,24 @@ int main(int argc, char **argv)
 			pair_t c = keys.object[i];
 			char *k = c.key.string;
 			printf("Grabbing key %s\n", k);
-			XGrabKey(dpy, XKEY(dpy, k), Mod1Mask, root, True, GrabModeAsync, GrabModeAsync);
+			XGrabKey(dpy, XKEY(dpy, k), Mod1Mask, root, True, GrabModeAsync,
+					 GrabModeAsync);
 		}
 	}
 
 	XGrabButton(dpy, 1, Mod1Mask, root, True,
-				ButtonPressMask|ButtonReleaseMask|PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None);
+				ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+				GrabModeAsync, GrabModeAsync, None, None);
 	XGrabButton(dpy, 3, Mod1Mask, root, True,
-				ButtonPressMask|ButtonReleaseMask|PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None);
+				ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+				GrabModeAsync, GrabModeAsync, None, None);
 
 #ifndef NDEBUG
 	XMapWindow(dpy, root);
 #endif
+
+	// run autorun script
+	exec_autorun(cfg);
 
 	for (;;)
 	{
@@ -106,23 +99,47 @@ int main(int argc, char **argv)
 			if (cmd.type == TYPE_STRING)
 			{
 				// run this command
-				if (strcmp(cmd.string, "focus") == 0 && ev.xkey.subwindow != None)
+				if (strcmp(cmd.string, "focus") == 0 &&
+					ev.xkey.subwindow != None)
 				{
 					XRaiseWindow(dpy, ev.xkey.subwindow);
 				}
 				else if (strcmp(cmd.string, "newterm") == 0)
 				{
-					run_cmd(termcmd);
+					runcmd(termcmd);
 				}
-				else if (strcmp(cmd.string, "closewin") == 0 && ev.xkey.subwindow != None)
+				else if (strcmp(cmd.string, "closewin") == 0 &&
+						 ev.xkey.subwindow != None)
 				{
 					XDestroyWindow(dpy, ev.xkey.subwindow);
 				}
 				else if (strcmp(cmd.string, "quit") == 0)
 				{
-					int quit = system("msgbox 'Are you sure you want to quit lilwm?'");
-					if (quit != 1)
+					int quit =
+						system("msgbox 'Are you sure you want to quit lilwm?'");
+					if (!quit)
 						goto finish;
+				}
+				else if (strncmp(cmd.string, "tile", 4) == 0 &&
+						 ev.xkey.subwindow != None)
+				{
+					char side[12];
+					if (sscanf(cmd.string, "tile %s", side))
+					{
+						XWindowAttributes attrs;
+						XGetWindowAttributes(dpy, root, &attrs);
+						if (strcmp(side, "right") == 0)
+						{
+							XMoveResizeWindow(dpy, ev.xkey.subwindow,
+											  attrs.width / 2, 0,
+											  attrs.width / 2, attrs.height);
+						}
+						else if (strcmp(side, "left") == 0)
+						{
+							XMoveResizeWindow(dpy, ev.xkey.subwindow, 0, 0,
+											  attrs.width / 2, attrs.height);
+						}
+					}
 				}
 			}
 		}

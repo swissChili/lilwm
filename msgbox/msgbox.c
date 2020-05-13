@@ -20,16 +20,16 @@ void draw(ui_ctx_t *ctx)
 	int cancel = ui_add(ui_btn("Cancel"));
 	ui_add(ui_hspacer(-1));
 	int ok = ui_add(ui_btn("Ok"));
-	ui_add(ui_hspacer(-2));
+	ui_add(ui_hspacer(-1));
 	ui_pack();
 
 	if (ui_widgetclicked(cancel))
 	{
-		exit(EXIT_FAILURE);
+		exit(1);
 	}
 	if (ui_widgetclicked(ok))
 	{
-		exit(EXIT_SUCCESS);
+		exit(0);
 	}
 }
 

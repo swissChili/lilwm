@@ -47,6 +47,7 @@ ui_window_t ui_window(int width, int height)
 	if (dpy == NULL)
 	{
 		fprintf(stderr, "Could not open X display\n");
+		exit(EXIT_FAILURE);
 	}
 	XSelectInput(dpy, w, ExposureMask | KeyPressMask | ButtonPressMask);
 	win.dpy = dpy;
