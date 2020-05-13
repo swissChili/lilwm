@@ -1,6 +1,7 @@
 #pragma once
 
 #include <X11/Xlib.h>
+#include <stdbool.h>
 
 #define RGB(r, g, b) (b + (g << 8) + (r << 16))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
@@ -11,6 +12,9 @@
 
 // maximum number of widgets per row
 #define UI_MAX_PER_ROW 32
+
+// maximum number of windows
+#define UI_MAX_WINDOWS 12
 
 typedef struct ui_mouseevent_t
 {
@@ -93,6 +97,7 @@ typedef struct ui_window_t
 	GC gc;
 	ui_row_t row;
 	int x, y;
+	bool should_update;
 } ui_window_t;
 
 typedef struct ui_ctx_t
@@ -110,20 +115,19 @@ typedef struct ui_inputstr_data_t
 
 #define UI_INPUTSTR_DATA() {.len = UI_MAX_INPUTSTR_LEN}
 
-typedef void (*ui_rendererloop_t)(ui_ctx_t *);
+typedef void (*ui_rendererloop_t)(ui_window_t *);
 
 ui_window_t ui_window(int w, int h);
-void ui_deletewindow(ui_window_t win);
 void ui_setwindow(ui_window_t *win);
 void ui_loop(ui_rendererloop_t rl);
-void ui_init();
-void ui_start();
-void ui_row();
-void ui_pack();
-int ui_isclicked(ui_widget_t w);
-int ui_widgetclicked(int i);
-int ui_add(ui_widget_t w);
-void ui_clear(unsigned long color);
+void ui_init(ui_window_t *win);
+void ui_start(ui_window_t *win);
+void ui_row(ui_window_t *win);
+void ui_pack(ui_window_t *win);
+int ui_isclicked(ui_window_t *win, ui_widget_t w);
+int ui_widgetclicked(ui_window_t *win, int i);
+int ui_add(ui_window_t *win, ui_widget_t w);
+void ui_clear(ui_window_t *win, unsigned long color);
 // widgets
 ui_widget_t ui_rectc(int w, int h, long color);
 ui_widget_t ui_rect4(int x, int y, int w, int h);

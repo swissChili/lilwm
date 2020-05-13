@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-void draw(ui_ctx_t *ctx)
+void draw(ui_window_t *w)
 {
 	static char *msg = "Not clicked";
 	static char input[128] = "hi";
@@ -12,27 +12,27 @@ void draw(ui_ctx_t *ctx)
 	static int cursor = 2;
 	static ui_inputstr_data_t data = UI_INPUTSTR_DATA();
 
-	ui_row();
-	ui_add(ui_inputstr(&data, -1));
-	ui_pack();
+	ui_row(w);
+	ui_add(w, ui_inputstr(&data, -1));
+	ui_pack(w);
 
-	ui_row();
-	ui_add(ui_hspacer(-1));
-	ui_add(ui_text(msg));
-	ui_add(ui_hspacer(-1));
-	ui_pack();
+	ui_row(w);
+	ui_add(w, ui_hspacer(-1));
+	ui_add(w, ui_text(msg));
+	ui_add(w, ui_hspacer(-1));
+	ui_pack(w);
 
-	ui_row();
-	ui_add(ui_hspacer(-1));
-	int txt = ui_add(ui_btn("Click me!!"));
-	ui_add(ui_hspacer(-1));
-	ui_pack();
+	ui_row(w);
+	ui_add(w, ui_hspacer(-1));
+	int txt = ui_add(w, ui_btn("Click me!!"));
+	ui_add(w, ui_hspacer(-1));
+	ui_pack(w);
 
-	if (ui_widgetclicked(txt))
+	if (ui_widgetclicked(w, txt))
 	{
 		msg = "Clicked!";
 		// fine
-		ctx->should_update = true;
+		w->should_update = true;
 	}
 }
 

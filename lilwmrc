@@ -1,0 +1,22 @@
+// Run on startup
+autorun
+{
+	cmd		"alacritty"
+	cmd		"msgbox 'Welcome to lilwm'"
+}
+
+// Key bindings
+keys
+{
+	Return	"newterm"
+	q		"quit"
+	w		"closewin"
+	Right	"tile right"
+	Left	"tile left"
+}
+
+// Default applications
+apps
+{
+	terminal	"alacritty"
+}

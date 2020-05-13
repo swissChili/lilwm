@@ -7,27 +7,27 @@
 
 static char *msg;
 
-void draw(ui_ctx_t *ctx)
+void draw(ui_window_t *w)
 {
-	ui_row();
-	ui_add(ui_hspacer(-1));
-	ui_add(ui_text(msg));
-	ui_add(ui_hspacer(-1));
-	ui_pack();
+	ui_row(w);
+	ui_add(w, ui_hspacer(-1));
+	ui_add(w, ui_text(msg));
+	ui_add(w, ui_hspacer(-1));
+	ui_pack(w);
 
-	ui_row();
-	ui_add(ui_hspacer(-1));
-	int cancel = ui_add(ui_btn("Cancel"));
-	ui_add(ui_hspacer(-1));
-	int ok = ui_add(ui_btn("Ok"));
-	ui_add(ui_hspacer(-1));
-	ui_pack();
+	ui_row(w);
+	ui_add(w, ui_hspacer(-1));
+	int cancel = ui_add(w, ui_btn("Cancel"));
+	ui_add(w, ui_hspacer(-1));
+	int ok = ui_add(w, ui_btn("Ok"));
+	ui_add(w, ui_hspacer(-1));
+	ui_pack(w);
 
-	if (ui_widgetclicked(cancel))
+	if (ui_widgetclicked(w, cancel))
 	{
 		exit(1);
 	}
-	if (ui_widgetclicked(ok))
+	if (ui_widgetclicked(w, ok))
 	{
 		exit(0);
 	}
