@@ -1,8 +1,8 @@
 #include "lilui.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <X11/keysym.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define NEW(x) (calloc(sizeof(x), 1))
 #define BUF_MAX_LEN 32
@@ -47,13 +47,13 @@ void ui_setwindow(ui_window_t win)
 	XMapWindow(g_d, g_w);
 }
 
-ui_window_t ui_window()
+ui_window_t ui_window(int width, int height)
 {
 	ui_window_t win;
 	Display *dpy = XOpenDisplay(NULL);
 	int scr = DefaultScreen(dpy);
 	Window w =
-		XCreateSimpleWindow(dpy, RootWindow(dpy, scr), 10, 10, 100, 100, 1,
+		XCreateSimpleWindow(dpy, RootWindow(dpy, scr), 10, 10, width, height, 1,
 							BlackPixel(dpy, scr), WhitePixel(dpy, scr));
 	if (dpy == NULL)
 	{
@@ -138,7 +138,7 @@ int ui_clickedoff(ui_widget_t w)
 {
 	if (!g_evt.type)
 		return 0;
-	
+
 	return !ui_isclicked(w);
 }
 
@@ -230,7 +230,8 @@ void ui_loop(ui_rendererloop_t rl)
 		else if (e.type == KeyPress)
 		{
 			Status status = 0;
-			g_buflen = Xutf8LookupString(g_win.ic, (XKeyPressedEvent*)&e, g_buf, 20, &g_keysym, &status);
+			g_buflen = Xutf8LookupString(g_win.ic, (XKeyPressedEvent *)&e,
+										 g_buf, 20, &g_keysym, &status);
 
 			char *keystr = XKeysymToString(g_keysym);
 
@@ -240,7 +241,7 @@ void ui_loop(ui_rendererloop_t rl)
 			}
 			if (g_buflen)
 			{
-				//printf("Buffer %.*s\n", g_buflen, g_buf);
+				// printf("Buffer %.*s\n", g_buflen, g_buf);
 			}
 			if (status == XLookupKeySym || status == XLookupBoth)
 			{
@@ -378,7 +379,7 @@ static ui_inputstr_data_t ui_inputstr_data()
 }
 
 void ui_bldinputstr(ui_widget_t i)
-{;
+{
 	ui_inputstr_data_t *d = (ui_inputstr_data_t *)i.data;
 	printf("Currnet focus is %d\n", d->focused);
 	printf("keysym: %d, Left: %d\n", g_keysym, XK_Left);
@@ -398,14 +399,16 @@ void ui_bldinputstr(ui_widget_t i)
 		{
 			if (strlen(d->text) > 0)
 			{
-				memmove(&d->text[d->cursor - 1], &d->text[d->cursor], strlen(d->text) - (d->cursor-1));
+				memmove(&d->text[d->cursor - 1], &d->text[d->cursor],
+						strlen(d->text) - (d->cursor - 1));
 				d->cursor--;
 			}
 		}
 		else if (g_keysym == XK_Delete)
 		{
 			printf("Deleting\n");
-			memmove(&d->text[d->cursor], &d->text[d->cursor + 1], strlen(d->text) - d->cursor);
+			memmove(&d->text[d->cursor], &d->text[d->cursor + 1],
+					strlen(d->text) - d->cursor);
 		}
 		else if (g_keysym == XK_Left)
 		{

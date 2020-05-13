@@ -38,7 +38,7 @@ void draw(ui_ctx_t *ctx)
 
 int main()
 {
-	ui_window_t win = ui_window();
+	ui_window_t win = ui_window(640, 480);
 	ui_setwindow(win);
 	ui_loop(draw);
 }

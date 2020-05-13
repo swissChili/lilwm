@@ -3,7 +3,8 @@
 #include <X11/Xlib.h>
 
 #define RGB(r, g, b) (b + (g << 8) + (r << 16))
-#define MAX(a, b) (a > b ? a : b)
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) > (b) ? (b) : (a))
 #ifndef UI_MAX_INPUTSTR_LEN
 #define UI_MAX_INPUTSTR_LEN 128
 #endif
@@ -97,7 +98,7 @@ typedef struct ui_inputstr_data_t
 
 typedef void (*ui_rendererloop_t)(ui_ctx_t *);
 
-ui_window_t ui_window();
+ui_window_t ui_window(int w, int h);
 void ui_setwindow(ui_window_t win);
 void ui_loop(ui_rendererloop_t rl);
 void ui_init();

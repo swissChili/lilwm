@@ -120,7 +120,9 @@ int main(int argc, char **argv)
 				}
 				else if (strcmp(cmd.string, "quit") == 0)
 				{
-					goto finish;
+					int quit = system("msgbox 'Are you sure you want to quit lilwm?'");
+					if (quit != 1)
+						goto finish;
 				}
 			}
 		}
