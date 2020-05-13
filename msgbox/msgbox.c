@@ -3,6 +3,7 @@
 #include <lilui.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 static char *msg;
 
@@ -17,9 +18,9 @@ void draw(ui_ctx_t *ctx)
 	ui_row();
 	ui_add(ui_hspacer(-1));
 	int cancel = ui_add(ui_btn("Cancel"));
-	ui_add(ui_hspacer(10));
-	int ok = ui_add(ui_btn("Ok"));
 	ui_add(ui_hspacer(-1));
+	int ok = ui_add(ui_btn("Ok"));
+	ui_add(ui_hspacer(-2));
 	ui_pack();
 
 	if (ui_widgetclicked(cancel))
@@ -43,6 +44,6 @@ int main(int argc, char **argv)
 		msg = "Provide your message as the first argument to msgbox.";
 	}
 	ui_window_t win = ui_window(MAX(strlen(msg) * 6 + 24, 120), 75);
-	ui_setwindow(win);
+	ui_setwindow(&win);
 	ui_loop(draw);
 }

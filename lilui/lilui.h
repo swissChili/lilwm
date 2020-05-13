@@ -12,49 +12,6 @@
 // maximum number of widgets per row
 #define UI_MAX_PER_ROW 32
 
-typedef struct ui_widget_t
-{
-	/**
-	 * x and y are the coordinates of the top-left corner of the widget.
-	 * Default -1 for auto-layout (recommended).
-	 */
-	int x, y;
-	/**
-	 * w and h are the width and height of the widget. 0 for minimum
-	 * viable size. Negative for dynamic sizing based on remaining space.
-	 */
-	int w, h;
-	/**
-	 * Widget data
-	 */
-	void *data;
-	/**
-	 * Function pointer to build (draw) this widget.
-	 */
-	void (*bld)(struct ui_widget_t);
-	// color
-	unsigned long color;
-	/**
-	 * Destructor
-	 */
-	void (*del)(void *);
-} ui_widget_t;
-
-typedef struct ui_row_t
-{
-	unsigned len;
-	ui_widget_t wdgts[UI_MAX_PER_ROW];
-} ui_row_t;
-
-typedef struct ui_window_t
-{
-	Window win;
-	Display *dpy;
-	int scr;
-	XIM im;
-	XIC ic;
-} ui_window_t;
-
 typedef struct ui_mouseevent_t
 {
 	enum
@@ -81,6 +38,63 @@ typedef struct ui_keyevent_t
 	char *str;
 } ui_keyevent_t;
 
+// forward decl
+struct ui_widget_t;
+struct ui_window_t;
+
+typedef struct ui_widget_t
+{
+	/**
+	 * x and y are the coordinates of the top-left corner of the widget.
+	 * Default -1 for auto-layout (recommended).
+	 */
+	int x, y;
+	/**
+	 * w and h are the width and height of the widget. 0 for minimum
+	 * viable size. Negative for dynamic sizing based on remaining space.
+	 */
+	int w, h;
+	/**
+	 * Widget data
+	 */
+	void *data;
+	/**
+	 * Function pointer to build (draw) this widget.
+	 */
+	void (*bld)(struct ui_window_t *win, struct ui_widget_t);
+	// color
+	unsigned long color;
+	/**
+	 * Destructor
+	 */
+	void (*del)(void *);
+} ui_widget_t;
+
+typedef struct ui_row_t
+{
+	unsigned len;
+	struct ui_widget_t wdgts[UI_MAX_PER_ROW];
+} ui_row_t;
+
+typedef struct ui_window_t
+{
+	enum
+	{
+		UI_WIN_TOPLEVEL,
+		UI_WIN_FLOATING,
+		UI_WIN_VIRTUAL,
+	} type;
+	ui_mouseevent_t evt;
+	Window win;
+	Display *dpy;
+	int scr;
+	XIM im;
+	XIC ic;
+	GC gc;
+	ui_row_t row;
+	int x, y;
+} ui_window_t;
+
 typedef struct ui_ctx_t
 {
 	int should_update;
@@ -99,7 +113,8 @@ typedef struct ui_inputstr_data_t
 typedef void (*ui_rendererloop_t)(ui_ctx_t *);
 
 ui_window_t ui_window(int w, int h);
-void ui_setwindow(ui_window_t win);
+void ui_deletewindow(ui_window_t win);
+void ui_setwindow(ui_window_t *win);
 void ui_loop(ui_rendererloop_t rl);
 void ui_init();
 void ui_start();
