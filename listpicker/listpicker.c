@@ -12,7 +12,30 @@ static int numoptions;
 void draw(ui_window_t *w)
 {
 	static int selected = 0;
+	static int j = 0;
+	static int real_selected = 0;
 	static ui_inputstr_data_t text = UI_INPUTSTR_DATA();
+
+	printf("Currently selected %d out of %d\n", real_selected, numoptions);
+
+	if (ui_keypressed(w, "Return"))
+	{
+		printf("returned and selected %d out of %d\n", real_selected, numoptions);
+		printf("%d\n", real_selected);
+		exit(0);
+	}
+	else if (ui_keypressed(w, "Down"))
+	{
+		if (selected < j)
+			selected++;
+		w->should_update = true;
+	}
+	else if (ui_keypressed(w, "Up"))
+	{
+		if (selected > 0)
+			selected--;
+		w->should_update = true;
+	}
 
 	ui_row(w);
 	ui_add(w, ui_inputstr(&text, -1));
@@ -20,16 +43,23 @@ void draw(ui_window_t *w)
 
 	int inputlen = strlen(text.text);
 
+	j = 0;
+	real_selected = 0;
 	for (int i = 0; i < numoptions; i++)
 	{
 		int dist = levenshtein(options[i], text.text);
-		printf("levenshtein %s %s = %d\n", options[i], text.text, dist);
-		if ((inputlen && dist < strlen(options[i]) - inputlen + 2) || !inputlen)
+		int itemlen = strlen(options[i]);
+		//printf("levenshtein %s %s = %d\n", options[i], text.text, dist);
+		if ((inputlen && itemlen >= inputlen &&
+			 dist < MIN(itemlen - inputlen + 1, 10)) ||
+			!inputlen)
 		{
 			int color = UI_BG;
-			if (i == selected)
+			if (j == selected)
 			{
 				color = UI_PRIMARY;
+				real_selected = i;
+				printf("this is selected: %d\n", real_selected);
 			}
 
 			ui_row(w);
@@ -39,35 +69,17 @@ void draw(ui_window_t *w)
 			ui_pack(w);
 			if (ui_widgetclicked(w, btn))
 			{
-				if (selected == i)
+				if (selected == j)
 				{
 					printf("%d\n", i);
 					exit(0);
 				}
-				selected = i;
+				selected = j;
+				real_selected = i;
 				w->should_update = true;
 			}
+			j++;
 		}
-	}
-
-	printf("Currently selected %d out of %d\n", selected, numoptions);
-
-	if (ui_keypressed(w, "Return"))
-	{
-		printf("%d\n", selected);
-		exit(0);
-	}
-	else if (ui_keypressed(w, "Down"))
-	{
-		if (selected < numoptions - 1)
-			selected++;
-		w->should_update = true;
-	}
-	else if (ui_keypressed(w, "Up"))
-	{
-		if (selected > 0)
-			selected--;
-		w->should_update = true;
 	}
 }
 
