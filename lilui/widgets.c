@@ -1,6 +1,7 @@
 #include "lilui.h"
 #include <X11/Xlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <X11/keysym.h>
 
 void ui_bldrect(ui_window_t *win, ui_widget_t w)

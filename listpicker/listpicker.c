@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 
 	ui_theme_t theme;
 	ui_basictheme(&theme);
-	ui_window_t win = ui_window(240, 240, theme);
+	ui_window_t win = ui_window("List Picker", 240, 240, theme);
 	ui_setwindow(&win);
 	ui_loop(draw);
 }

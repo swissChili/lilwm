@@ -161,7 +161,8 @@ typedef struct ui_inputstr_data_t
 
 typedef void (*ui_rendererloop_t)(ui_window_t *);
 
-ui_window_t ui_window(int w, int h, ui_theme_t theme);
+void ui_fg(ui_window_t *win, unsigned long color);
+ui_window_t ui_window(char *name, int w, int h, ui_theme_t theme);
 void ui_setwindow(ui_window_t *win);
 void ui_loop(ui_rendererloop_t rl);
 void ui_init(ui_window_t *win);
@@ -169,6 +170,7 @@ void ui_start(ui_window_t *win);
 void ui_row(ui_window_t *win);
 void ui_pack(ui_window_t *win);
 int ui_isclicked(ui_window_t *win, ui_widget_t w);
+int ui_clickedoff(ui_window_t *win, ui_widget_t w);
 int ui_widgetclicked(ui_window_t *win, int i);
 int ui_add(ui_window_t *win, ui_widget_t w);
 void ui_clear(ui_window_t *win, unsigned long color);

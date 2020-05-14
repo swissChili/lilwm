@@ -30,7 +30,7 @@ void ui_setwindow(ui_window_t *win)
 	XMapWindow(win->dpy, win->win);
 }
 
-ui_window_t ui_window(int width, int height, ui_theme_t theme)
+ui_window_t ui_window(char *name, int width, int height, ui_theme_t theme)
 {
 	ui_window_t win;
 	Display *dpy = XOpenDisplay(NULL);
@@ -42,6 +42,8 @@ ui_window_t ui_window(int width, int height, ui_theme_t theme)
 	Window w = XCreateWindow(dpy, RootWindow(dpy, scr), 100, 100, width, height,
 							 1, CopyFromParent, InputOutput, CopyFromParent,
 							 CWCursor | CWBackPixel, &attrs);
+
+	XStoreName(dpy, w, name);
 
 	if (dpy == NULL)
 	{
@@ -135,8 +137,8 @@ int ui_isclicked(ui_window_t *win, ui_widget_t w)
 		return win->evt.x >= l && win->evt.x <= r && win->evt.y >= t &&
 			   win->evt.y <= b;
 	}
-	else
-		return 0;
+
+	return 0;
 }
 
 int ui_clickedoff(ui_window_t *win, ui_widget_t w)
