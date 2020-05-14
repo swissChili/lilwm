@@ -2,4 +2,13 @@
 
 num=$(ls /usr/share/applications/ | sed 's/\.[^.]*$//' | xargs listpicker)
 
-ls /usr/share/applications | sed '${num}q;d' | xargs rundesktop
+# 0 indexed
+num=$((num + 1))
+
+echo $num
+
+desktop=$(ls /usr/share/applications | sed "${num}q;d")
+
+echo $desktop
+
+rundesktop "/usr/share/applications/$desktop"

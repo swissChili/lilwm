@@ -16,11 +16,11 @@ void draw(ui_window_t *w)
 	static int real_selected = 0;
 	static ui_inputstr_data_t text = UI_INPUTSTR_DATA();
 
-	printf("Currently selected %d out of %d\n", real_selected, numoptions);
+	//printf("Currently selected %d out of %d\n", real_selected, numoptions);
 
 	if (ui_keypressed(w, "Return"))
 	{
-		printf("returned and selected %d out of %d\n", real_selected, numoptions);
+		//printf("returned and selected %d out of %d\n", real_selected, numoptions);
 		printf("%d\n", real_selected);
 		exit(0);
 	}
@@ -59,7 +59,7 @@ void draw(ui_window_t *w)
 			{
 				color = UI_PRIMARY;
 				real_selected = i;
-				printf("this is selected: %d\n", real_selected);
+				//printf("this is selected: %d\n", real_selected);
 			}
 
 			ui_row(w);
