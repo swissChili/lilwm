@@ -19,11 +19,15 @@ add_executable(msgbox
 	msgbox/msgbox.c)
 target_link_libraries(msgbox lilui)
 
+add_executable(listpicker
+	listpicker/listpicker.c listpicker/levenshtein.c)
+target_link_libraries(listpicker lilui)
+
 add_executable(lilwm
 	lilwm.c config.c config.h)
 target_link_libraries(lilwm libfastkv X11)
 
-install(TARGETS lilwm lilui msgbox
+install(TARGETS lilwm lilui msgbox listpicker
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION lib
 	ARCHIVE DESTINATION lib/static)

@@ -197,15 +197,22 @@ void ui_clear(ui_window_t *win, unsigned long color)
 	XClearWindow(win->dpy, win->win);
 }
 
+void ui_clearwinstate(ui_window_t *win)
+{
+	win->buflen = 0;
+	win->keysym = 0;
+}
+
 void ui_redraw(ui_window_t *win, ui_rendererloop_t rl)
 {
 	do
 	{
 		ui_clear(win, RGB(255, 255, 255));
-		win->should_update = 0;
+		win->should_update = false;
 		ui_start(win);
 		rl(win);
 		win->evt.type = UI_EVT_NONE;
+		ui_clearwinstate(win);
 	} while (win->should_update);
 }
 

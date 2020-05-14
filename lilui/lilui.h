@@ -173,11 +173,13 @@ int ui_widgetclicked(ui_window_t *win, int i);
 int ui_add(ui_window_t *win, ui_widget_t w);
 void ui_clear(ui_window_t *win, unsigned long color);
 void ui_basictheme(ui_theme_t *t);
+int ui_keypressed(ui_window_t *win, char *key);
 // widgets
-ui_widget_t ui_rectc(int w, int h, long color);
+ui_widget_t ui_rectc(int w, int h, int color);
 ui_widget_t ui_rect4(int x, int y, int w, int h);
 ui_widget_t ui_rect(int w, int h);
 ui_widget_t ui_text(char *text);
+ui_widget_t ui_btnc(char *text, int color);
 ui_widget_t ui_btn(char *text);
 ui_widget_t ui_progressbar(double *progress, int wlen);
 ui_widget_t ui_inputstr(ui_inputstr_data_t *data, int widget_len);

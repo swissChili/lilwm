@@ -8,16 +8,21 @@ void ui_bldrect(ui_window_t *win, ui_widget_t w)
 	XFillRectangle(win->dpy, win->win, win->gc, w.x, w.y, w.w, w.h);
 }
 
-ui_widget_t ui_rect(int w, int h)
+ui_widget_t ui_rectc(int w, int h, int c)
 {
 	return (ui_widget_t){
 		.x = -1,
 		.y = -1,
 		.w = w,
 		.h = h,
-		.theme_color = UI_DARK,
+		.theme_color = c,
 		.bld = ui_bldrect,
 	};
+}
+
+ui_widget_t ui_rect(int w, int h)
+{
+	return ui_rectc(w, h, UI_DARK);
 }
 
 ui_widget_t ui_rect4(int x, int y, int w, int h)
@@ -55,19 +60,24 @@ ui_widget_t ui_text(char *text)
 
 void ui_bldbtn(ui_window_t *win, ui_widget_t b)
 {
-	b.theme_color = UI_PRIMARY;
 	ui_bldrect(win, b);
 	b.x += 8;
 	b.theme_color = UI_FG;
 	ui_bldtext(win, b);
 }
 
-ui_widget_t ui_btn(char *text)
+ui_widget_t ui_btnc(char *text, int c)
 {
 	ui_widget_t t = ui_text(text);
 	t.w += 16;
+	t.theme_color = c;
 	t.bld = ui_bldbtn;
 	return t;
+}
+
+ui_widget_t ui_btn(char *text)
+{
+	return ui_btnc(text, UI_PRIMARY);
 }
 
 void ui_bldnothing(ui_window_t *win, ui_widget_t w)
