@@ -56,6 +56,8 @@ int main(int argc, char **argv)
 
 	item_t keys = kv_query(cfg.p, "keys");
 
+	int tile_gap = kv_intdefault(cfg.p, "tile.gap", 16);
+
 	if (keys.type != TYPE_OBJECT)
 	{
 		// defaults
@@ -140,14 +142,18 @@ int main(int argc, char **argv)
 						XGetWindowAttributes(dpy, root, &attrs);
 						if (strcmp(side, "right") == 0)
 						{
-							XMoveResizeWindow(dpy, ev.xkey.subwindow,
-											  attrs.width / 2, 0,
-											  attrs.width / 2, attrs.height);
+							XMoveResizeWindow(
+								dpy, ev.xkey.subwindow,
+								(attrs.width / 2) + tile_gap / 2, tile_gap,
+								(attrs.width / 2) - 1.5 * tile_gap,
+								attrs.height - 2 * tile_gap);
 						}
 						else if (strcmp(side, "left") == 0)
 						{
-							XMoveResizeWindow(dpy, ev.xkey.subwindow, 0, 0,
-											  attrs.width / 2, attrs.height);
+							XMoveResizeWindow(
+								dpy, ev.xkey.subwindow, tile_gap, tile_gap,
+								(attrs.width / 2) - 1.5 * tile_gap,
+								attrs.height - 2 * tile_gap);
 						}
 					}
 				}

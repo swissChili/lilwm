@@ -1,8 +1,15 @@
 // Run on startup
 autorun
 {
-	cmd		"alacritty"
 	cmd		"msgbox 'Welcome to lilwm'"
+	cmd		"feh --bg-fill ~/Pictures/wallpaper.jpg"
+}
+
+// tiling-related options
+tile
+{
+	// how big the gap between windows is (0 for none)
+	gap 12
 }
 
 // Key bindings
@@ -13,6 +20,7 @@ keys
 	w		"closewin"
 	Right	"tile right"
 	Left	"tile left"
+	space	"shell pickdesktop"
 }
 
 // Default applications

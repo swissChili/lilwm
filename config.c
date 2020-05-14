@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 struct config parsefile(char *file)
 {
@@ -42,6 +43,21 @@ char *kv_strdefault(item_t p, char *k, char *d)
 	item_t r = kv_query(p, k);
 	if (r.type == TYPE_STRING)
 		return r.string;
+	else
+		return d;
+}
+
+int kv_intdefault(item_t p, char *k, int d)
+{
+	item_t r = kv_query(p, k);
+	if (r.type == TYPE_STRING)
+	{
+		char *end;
+		int i = strtol(r.string, &end, 10);
+		if (end == r.string)
+			return d;
+		return i;
+	}
 	else
 		return d;
 }
