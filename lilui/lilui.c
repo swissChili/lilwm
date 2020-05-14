@@ -127,8 +127,8 @@ int ui_isclicked(ui_window_t *win, ui_widget_t w)
 	int l = w.x, r = w.x + w.w, t = w.y, b = w.y + w.h;
 
 	if (win->evt.type)
-		printf("evt %d at %d, %d\n", win->evt.type, win->evt.x, win->evt.y);
-	// printf("l r t b %d %d %d %d\n", l, r, t, b);
+		//printf("evt %d at %d, %d\n", win->evt.type, win->evt.x, win->evt.y);
+	// //printf("l r t b %d %d %d %d\n", l, r, t, b);
 
 	if (win->evt.type == UI_EVT_CLICK)
 	{
@@ -182,7 +182,7 @@ void ui_pack(ui_window_t *win)
 
 	win->x = 0;
 	win->y += max_h;
-	// printf("Packed, y is now %d\n", g_y);
+	// //printf("Packed, y is now %d\n", g_y);
 }
 
 int ui_add(ui_window_t *win, ui_widget_t w)
@@ -245,13 +245,13 @@ int ui_windowevent(XEvent e, ui_window_t *win, ui_rendererloop_t rl)
 
 		if (status == XBufferOverflow)
 		{
-			printf("Buffer overflow");
+			//printf("Buffer overflow");
 		}
 		if (status == XLookupKeySym || status == XLookupBoth)
 		{
-			printf("Status: %d\n", status);
+			//printf("Status: %d\n", status);
 		}
-		printf("Pressed key %s (%lu)\n", keystr, win->keysym);
+		//printf("Pressed key %s (%lu)\n", keystr, win->keysym);
 
 		ui_redraw(win, rl);
 	}
@@ -264,7 +264,7 @@ int ui_windowevent(XEvent e, ui_window_t *win, ui_rendererloop_t rl)
 
 		if (e.xbutton.button >= 1 && e.xbutton.button <= 3)
 		{
-			printf("Mouse clicked %d\n", e.xbutton.button);
+			//printf("Mouse clicked %d\n", e.xbutton.button);
 			int x = e.xbutton.x, y = e.xbutton.y;
 			win->evt = (ui_mouseevent_t){
 				.evt = UI_MOUSE_DOWN,
