@@ -1,0 +1,11 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=lilwm
+Comment=a little window manager
+Exec=lilwm
+Terminal=False
+TryExec=lilwm
+Type=Application
+
+[Window Manager]
+SessionManaged=true

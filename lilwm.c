@@ -1,5 +1,6 @@
 #include "config.h"
 #include <X11/Xlib.h>
+#include <X11/cursorfont.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,6 +9,8 @@
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 #define XKEY(dpy, k) XKeysymToKeycode(dpy, XStringToKeysym(k))
+
+#define MOD Mod4Mask
 
 int kv_xkey(Display *dpy, item_t i, char *q, char *undef)
 {
@@ -67,24 +70,31 @@ int main(int argc, char **argv)
 			pair_t c = keys.object[i];
 			char *k = c.key.string;
 			printf("Grabbing key %s\n", k);
-			XGrabKey(dpy, XKEY(dpy, k), Mod1Mask, root, True, GrabModeAsync,
+			XGrabKey(dpy, XKEY(dpy, k), MOD, root, True, GrabModeAsync,
 					 GrabModeAsync);
 		}
 	}
 
-	XGrabButton(dpy, 1, Mod1Mask, root, True,
+	XGrabButton(dpy, 1, MOD, root, True,
 				ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
 				GrabModeAsync, GrabModeAsync, None, None);
-	XGrabButton(dpy, 3, Mod1Mask, root, True,
+	XGrabButton(dpy, 3, MOD, root, True,
 				ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
 				GrabModeAsync, GrabModeAsync, None, None);
 
 #ifndef NDEBUG
 	XMapWindow(dpy, root);
 #endif
+	XSetWindowAttributes attrs;
+	attrs.cursor = XCreateFontCursor(dpy, XC_arrow);
+	XChangeWindowAttributes(dpy, root, CWCursor, &attrs);
 
+	// open a terminal
+	runcmd(kv_strdefault(cfg.p, "apps.terminal", "xterm"));
 	// run autorun script
 	exec_autorun(cfg);
+
+	XSetInputFocus(dpy, root, RevertToParent, CurrentTime);
 
 	for (;;)
 	{
@@ -149,6 +159,7 @@ int main(int argc, char **argv)
 						 PointerMotionMask | ButtonReleaseMask, GrabModeAsync,
 						 GrabModeAsync, None, None, CurrentTime);
 			XRaiseWindow(dpy, ev.xbutton.subwindow);
+
 			XGetWindowAttributes(dpy, ev.xbutton.subwindow, &attr);
 			start = ev.xbutton;
 		}

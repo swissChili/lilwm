@@ -18,7 +18,7 @@ void draw(ui_window_t *w)
 	ui_row(w);
 	ui_add(w, ui_hspacer(-1));
 	int cancel = ui_add(w, ui_btn("Cancel"));
-	ui_add(w, ui_hspacer(-1));
+	ui_add(w, ui_hspacer(10));
 	int ok = ui_add(w, ui_btn("Ok"));
 	ui_add(w, ui_hspacer(-1));
 	ui_pack(w);

@@ -1,4 +1,5 @@
 #include "lilui.h"
+#include <X11/cursorfont.h>
 #include <X11/keysym.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,9 +35,14 @@ ui_window_t ui_window(int width, int height)
 	ui_window_t win;
 	Display *dpy = XOpenDisplay(NULL);
 	int scr = DefaultScreen(dpy);
-	Window w =
-		XCreateSimpleWindow(dpy, RootWindow(dpy, scr), 10, 10, width, height, 1,
-							BlackPixel(dpy, scr), WhitePixel(dpy, scr));
+	XSetWindowAttributes attrs;
+	attrs.cursor = XCreateFontCursor(dpy, XC_arrow);
+	attrs.background_pixel = WhitePixel(dpy, scr);
+
+	Window w = XCreateWindow(dpy, RootWindow(dpy, scr), 100, 100, width, height,
+							 1, CopyFromParent, InputOutput, CopyFromParent,
+							 CWCursor | CWBackPixel, &attrs);
+
 	if (dpy == NULL)
 	{
 		fprintf(stderr, "Could not open X display\n");

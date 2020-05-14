@@ -27,3 +27,6 @@ install(TARGETS lilwm lilui msgbox
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION lib
 	ARCHIVE DESTINATION lib/static)
+
+install(FILES lilwm.desktop
+	DESTINATION /usr/share/applications)
