@@ -13,21 +13,20 @@ void draw(ui_window_t *w)
 	static double progress = 0.05;
 	static ui_inputstr_data_t data = UI_INPUTSTR_DATA();
 
-	ui_row(w);
-	ui_add(w, ui_inputstr(&data, 200));
-	ui_add(w, ui_progressbar(&progress, -1));
-	ui_pack(w);
+	ui_row_t *progrow = ui_row(w);
+	ui_add(progrow, ui_inputstr(&data, 200));
+	ui_add(progrow, ui_progressbar(&progress, -1));
 
-	ui_row(w);
-	ui_add(w, ui_hspacer(-1));
-	ui_add(w, ui_text(msg));
-	ui_add(w, ui_hspacer(-1));
-	ui_pack(w);
+	ui_row_t *msgrow = ui_row(w);
+	ui_add(msgrow, ui_hspacer(-1));
+	ui_add(msgrow, ui_text(msg));
+	ui_add(msgrow, ui_hspacer(-1));
 
-	ui_row(w);
-	ui_add(w, ui_hspacer(-1));
-	int txt = ui_add(w, ui_btn("Click me!!"));
-	ui_add(w, ui_hspacer(-1));
+	ui_row_t *btnrow = ui_row(w);
+	ui_add(btnrow, ui_hspacer(-1));
+	ui_widget_t *txt = ui_add(btnrow, ui_btn("Click me!!"));
+	ui_add(btnrow, ui_hspacer(-1));
+
 	ui_pack(w);
 
 	if (ui_widgetclicked(w, txt))

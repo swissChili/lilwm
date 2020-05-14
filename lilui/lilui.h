@@ -1,5 +1,6 @@
 #pragma once
 
+#include "list.h"
 #include <X11/Xlib.h>
 #include <stdbool.h>
 
@@ -77,12 +78,6 @@ typedef struct ui_widget_t
 	void (*del)(void *);
 } ui_widget_t;
 
-typedef struct ui_row_t
-{
-	unsigned len;
-	struct ui_widget_t wdgts[UI_MAX_PER_ROW];
-} ui_row_t;
-
 // color options
 enum
 {
@@ -99,8 +94,7 @@ enum
 
 typedef struct ui_theme_t
 {
-	union
-	{
+	union {
 		unsigned long c[UI_NUM_THEME_COLORS];
 		struct
 		{
@@ -115,6 +109,12 @@ typedef struct ui_theme_t
 		} n;
 	};
 } ui_theme_t;
+
+UI_DECL_LIST(ui_widget_t)
+#define ui_row_t UI_LIST(ui_widget_t)
+
+UI_DECL_LIST(ui_row_t)
+#define ui_rowlist_t UI_LIST(ui_row_t)
 
 typedef struct ui_window_t
 {
@@ -131,7 +131,7 @@ typedef struct ui_window_t
 	XIM im;
 	XIC ic;
 	GC gc;
-	ui_row_t row;
+	ui_rowlist_t rows;
 	int x, y;
 	bool should_update;
 	char buf[UI_MAX_BUF_LEN];
@@ -167,12 +167,12 @@ void ui_setwindow(ui_window_t *win);
 void ui_loop(ui_rendererloop_t rl);
 void ui_init(ui_window_t *win);
 void ui_start(ui_window_t *win);
-void ui_row(ui_window_t *win);
+ui_row_t *ui_row(ui_window_t *win);
 void ui_pack(ui_window_t *win);
 int ui_isclicked(ui_window_t *win, ui_widget_t w);
 int ui_clickedoff(ui_window_t *win, ui_widget_t w);
-int ui_widgetclicked(ui_window_t *win, int i);
-int ui_add(ui_window_t *win, ui_widget_t w);
+int ui_widgetclicked(ui_window_t *win, ui_widget_t *w);
+ui_widget_t *ui_add(ui_row_t *r, ui_widget_t w);
 void ui_clear(ui_window_t *win, unsigned long color);
 void ui_basictheme(ui_theme_t *t);
 int ui_keypressed(ui_window_t *win, char *key);

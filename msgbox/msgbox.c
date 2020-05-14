@@ -9,18 +9,18 @@ static char *msg;
 
 void draw(ui_window_t *w)
 {
-	ui_row(w);
-	ui_add(w, ui_hspacer(-1));
-	ui_add(w, ui_text(msg));
-	ui_add(w, ui_hspacer(-1));
-	ui_pack(w);
+	ui_row_t *msgrow = ui_row(w);
+	ui_add(msgrow, ui_hspacer(-1));
+	ui_add(msgrow, ui_text(msg));
+	ui_add(msgrow, ui_hspacer(-1));
 
-	ui_row(w);
-	ui_add(w, ui_hspacer(-1));
-	int cancel = ui_add(w, ui_btn("Cancel"));
-	ui_add(w, ui_hspacer(10));
-	int ok = ui_add(w, ui_btn("Ok"));
-	ui_add(w, ui_hspacer(-1));
+	ui_row_t *btnrow = ui_row(w);
+	ui_add(btnrow, ui_hspacer(-1));
+	ui_widget_t *cancel = ui_add(btnrow, ui_btn("Cancel"));
+	ui_add(btnrow, ui_hspacer(10));
+	ui_widget_t *ok = ui_add(btnrow, ui_btn("Ok"));
+	ui_add(btnrow, ui_hspacer(-1));
+
 	ui_pack(w);
 
 	if (ui_widgetclicked(w, cancel))

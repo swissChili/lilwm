@@ -37,9 +37,8 @@ void draw(ui_window_t *w)
 		w->should_update = true;
 	}
 
-	ui_row(w);
-	ui_add(w, ui_inputstr(&text, -1));
-	ui_pack(w);
+	ui_row_t *inputrow = ui_row(w);
+	ui_add(inputrow, ui_inputstr(&text, -1));
 
 	int inputlen = strlen(text.text);
 
@@ -62,11 +61,9 @@ void draw(ui_window_t *w)
 				//printf("this is selected: %d\n", real_selected);
 			}
 
-			ui_row(w);
 			ui_widget_t btn_w = ui_btnc(options[i], color);
 			btn_w.w = -1;
-			int btn = ui_add(w, btn_w);
-			ui_pack(w);
+			ui_widget_t *btn = ui_add(ui_row(w), btn_w);
 			if (ui_widgetclicked(w, btn))
 			{
 				if (selected == j)
@@ -81,6 +78,7 @@ void draw(ui_window_t *w)
 			j++;
 		}
 	}
+	ui_pack(w);
 }
 
 int main(int argc, char **argv)

@@ -11,6 +11,9 @@
 static ui_window_t g_windows[UI_MAX_WINDOWS];
 static int g_numwindows;
 
+UI_DEF_LIST(ui_widget_t)
+UI_DEF_LIST(ui_row_t)
+
 void ui_init(ui_window_t *win)
 {
 	win->gc = DefaultGC(win->dpy, win->scr);
@@ -22,6 +25,12 @@ void ui_start(ui_window_t *win)
 {
 	win->x = 0;
 	win->y = 0;
+	for (int i = 0; i < win->rows.len; i++)
+	{
+		ui_row_t *current = UI_NTH(win->rows, ui_row_t, i);
+		UI_CLEAR(current, ui_widget_t);
+	}
+	UI_CLEAR(&win->rows, ui_row_t);
 }
 
 void ui_setwindow(ui_window_t *win)
@@ -54,7 +63,7 @@ ui_window_t ui_window(char *name, int width, int height, ui_theme_t theme)
 	win.dpy = dpy;
 	win.scr = scr;
 	win.win = w;
-	win.row.len = 0;
+	win.rows = UI_NEW_LIST(ui_row_t);
 	win.buflen = 0;
 	win.theme = theme;
 
@@ -68,10 +77,6 @@ ui_window_t ui_window(char *name, int width, int height, ui_theme_t theme)
 	return win;
 }
 
-void ui_deletewindow(ui_window_t win)
-{
-}
-
 void ui_fg(ui_window_t *win, unsigned long color)
 {
 	XSetForeground(win->dpy, win->gc, color);
@@ -82,16 +87,11 @@ void ui_fg3(ui_window_t *win, unsigned char r, unsigned char g, unsigned char b)
 	XSetForeground(win->dpy, win->gc, RGB(r, g, b));
 }
 
-void ui_row(ui_window_t *win)
+ui_row_t *ui_row(ui_window_t *win)
 {
-	for (int i = 0; i < win->row.len; i++)
-	{
-		if (win->row.wdgts[i].data && win->row.wdgts[i].del)
-		{
-			win->row.wdgts[i].del(win->row.wdgts[i].data);
-		}
-	}
-	win->row.len = 0;
+	// add an empty row
+	UI_ADD(&win->rows, ui_row_t, UI_NEW_LIST(ui_widget_t));
+	return &win->rows.last->val;
 }
 
 ui_widget_t ui_dynsz(ui_window_t *win, ui_widget_t w, int fw, int fh,
@@ -112,11 +112,9 @@ ui_widget_t ui_dynsz(ui_window_t *win, ui_widget_t w, int fw, int fh,
 	return w;
 }
 
-int ui_widgetclicked(ui_window_t *win, int i)
+int ui_widgetclicked(ui_window_t *win, ui_widget_t *w)
 {
-	if (i >= win->row.len)
-		return 0;
-	return ui_isclicked(win, win->row.wdgts[i]);
+	return ui_isclicked(win, *w);
 }
 
 int ui_keypressed(ui_window_t *win, char *key)
@@ -127,10 +125,6 @@ int ui_keypressed(ui_window_t *win, char *key)
 int ui_isclicked(ui_window_t *win, ui_widget_t w)
 {
 	int l = w.x, r = w.x + w.w, t = w.y, b = w.y + w.h;
-
-	if (win->evt.type)
-		//printf("evt %d at %d, %d\n", win->evt.type, win->evt.x, win->evt.y);
-	// //printf("l r t b %d %d %d %d\n", l, r, t, b);
 
 	if (win->evt.type == UI_EVT_CLICK)
 	{
@@ -153,44 +147,51 @@ void ui_pack(ui_window_t *win)
 {
 	XWindowAttributes a;
 	XGetWindowAttributes(win->dpy, win->win, &a);
-	int w = a.width, h = a.height,
-		w_w = 0,		// combined width of all widgets
-		w_h = 0,		// combined height of all widgets
-		flex_num_w = 0, // proportional flexible space
-		flex_num_h = 0, max_h = 0;
 
-	for (int i = 0; i < win->row.len; i++)
+	for (int r = 0; r < win->rows.len; r++)
 	{
-		if (win->row.wdgts[i].w >= 0)
-			w_w += win->row.wdgts[i].w;
-		else
-			flex_num_w += 0 - win->row.wdgts[i].w;
+		int w = a.width, h = a.height,
+			w_w = 0,		// combined width of all widgets
+			w_h = 0,		// combined height of all widgets
+			flex_num_w = 0, // proportional flexible space
+			flex_num_h = 0, max_h = 0;
 
-		if (win->row.wdgts[i].h >= 0)
-			w_h += win->row.wdgts[i].h;
-		else
-			flex_num_h += 0 - win->row.wdgts[i].h;
+		ui_row_t *row = UI_NTH(win->rows, ui_row_t, r);
+
+		for (int i = 0; i < row->len; i++)
+		{
+			ui_widget_t *wdgt = UI_NTH(*row, ui_widget_t, i);
+			if (wdgt->w >= 0)
+				w_w += wdgt->w;
+			else
+				flex_num_w += 0 - wdgt->w;
+
+			if (wdgt->h >= 0)
+				w_h += wdgt->h;
+			else
+				flex_num_h += 0 - wdgt->h;
+		}
+		// flexible space
+		int flex_w = flex_num_w ? (w - w_w) / flex_num_w : 0,
+			flex_h = flex_num_h ? (h - w_h) / flex_num_h : 0;
+
+		for (int i = 0; i < row->len; i++)
+		{
+			ui_widget_t *wdgt = UI_NTH(*row, ui_widget_t, i);
+			*wdgt = ui_dynsz(win, *wdgt, flex_w, flex_h, &max_h);
+			wdgt->bld(win, *wdgt);
+		}
+
+		win->x = 0;
+		win->y += max_h;
 	}
-	// flexible space
-	int flex_w = flex_num_w ? (w - w_w) / flex_num_w : 0,
-		flex_h = flex_num_h ? (h - w_h) / flex_num_h : 0;
-
-	for (int i = 0; i < win->row.len; i++)
-	{
-		win->row.wdgts[i] =
-			ui_dynsz(win, win->row.wdgts[i], flex_w, flex_h, &max_h);
-		win->row.wdgts[i].bld(win, win->row.wdgts[i]);
-	}
-
-	win->x = 0;
-	win->y += max_h;
 	// //printf("Packed, y is now %d\n", g_y);
 }
 
-int ui_add(ui_window_t *win, ui_widget_t w)
+ui_widget_t *ui_add(ui_row_t *r, ui_widget_t w)
 {
-	win->row.wdgts[win->row.len] = w;
-	return win->row.len++;
+	UI_ADD(r, ui_widget_t, w);
+	return &r->last->val;
 }
 
 void ui_clear(ui_window_t *win, unsigned long color)
@@ -247,13 +248,13 @@ int ui_windowevent(XEvent e, ui_window_t *win, ui_rendererloop_t rl)
 
 		if (status == XBufferOverflow)
 		{
-			//printf("Buffer overflow");
+			// printf("Buffer overflow");
 		}
 		if (status == XLookupKeySym || status == XLookupBoth)
 		{
-			//printf("Status: %d\n", status);
+			// printf("Status: %d\n", status);
 		}
-		//printf("Pressed key %s (%lu)\n", keystr, win->keysym);
+		// printf("Pressed key %s (%lu)\n", keystr, win->keysym);
 
 		ui_redraw(win, rl);
 	}
@@ -266,7 +267,7 @@ int ui_windowevent(XEvent e, ui_window_t *win, ui_rendererloop_t rl)
 
 		if (e.xbutton.button >= 1 && e.xbutton.button <= 3)
 		{
-			//printf("Mouse clicked %d\n", e.xbutton.button);
+			// printf("Mouse clicked %d\n", e.xbutton.button);
 			int x = e.xbutton.x, y = e.xbutton.y;
 			win->evt = (ui_mouseevent_t){
 				.evt = UI_MOUSE_DOWN,
