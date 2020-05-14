@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+num=$(ls /usr/share/applications/ | sed 's/\.[^.]*$//' | xargs listpicker)
+
+ls /usr/share/applications | sed '${num}q;d' | xargs rundesktop

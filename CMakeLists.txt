@@ -34,3 +34,7 @@ install(TARGETS lilwm lilui msgbox listpicker
 
 install(FILES lilwm.desktop
 	DESTINATION /usr/share/applications)
+
+install(FILES rundesktop pickdesktop
+	DESTINATION bin
+	PERMISSIONS WORLD_EXECUTE WORLD_READ)

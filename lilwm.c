@@ -151,6 +151,10 @@ int main(int argc, char **argv)
 						}
 					}
 				}
+				else if (strncmp(cmd.string, "shell", 5) == 0)
+				{
+					runcmd(cmd.string + 5);
+				}
 			}
 		}
 		else if (ev.type == ButtonPress && ev.xbutton.subwindow != None)
