@@ -41,7 +41,9 @@ void draw(ui_window_t *w)
 
 int main()
 {
-	ui_window_t win = ui_window(640, 480);
+	ui_theme_t theme;
+	ui_basictheme(&theme);
+	ui_window_t win = ui_window(640, 480, theme);
 	ui_setwindow(&win);
 	ui_loop(draw);
 }

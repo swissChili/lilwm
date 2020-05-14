@@ -70,7 +70,7 @@ typedef struct ui_widget_t
 	 */
 	void (*bld)(struct ui_window_t *win, struct ui_widget_t);
 	// color
-	unsigned long color;
+	int theme_color;
 	/**
 	 * Destructor
 	 */
@@ -82,6 +82,39 @@ typedef struct ui_row_t
 	unsigned len;
 	struct ui_widget_t wdgts[UI_MAX_PER_ROW];
 } ui_row_t;
+
+// color options
+enum
+{
+	UI_FG = 0,
+	UI_BG,
+	UI_PRIMARY,
+	UI_PRIMARY_ACCENT,
+	UI_DARK,
+	UI_DARK_ACCENT,
+	UI_LIGHT,
+	UI_LIGHT_ACCENT,
+	UI_NUM_THEME_COLORS,
+};
+
+typedef struct ui_theme_t
+{
+	union
+	{
+		unsigned long c[UI_NUM_THEME_COLORS];
+		struct
+		{
+			unsigned long fg;
+			unsigned long bg;
+			unsigned long primary;
+			unsigned long primary_accent;
+			unsigned long dark;
+			unsigned long dark_accent;
+			unsigned long light;
+			unsigned long light_accent;
+		} n;
+	};
+} ui_theme_t;
 
 typedef struct ui_window_t
 {
@@ -104,6 +137,7 @@ typedef struct ui_window_t
 	char buf[UI_MAX_BUF_LEN];
 	int buflen;
 	KeySym keysym;
+	ui_theme_t theme;
 } ui_window_t;
 
 typedef struct ui_ctx_t
@@ -127,7 +161,7 @@ typedef struct ui_inputstr_data_t
 
 typedef void (*ui_rendererloop_t)(ui_window_t *);
 
-ui_window_t ui_window(int w, int h);
+ui_window_t ui_window(int w, int h, ui_theme_t theme);
 void ui_setwindow(ui_window_t *win);
 void ui_loop(ui_rendererloop_t rl);
 void ui_init(ui_window_t *win);
@@ -138,6 +172,7 @@ int ui_isclicked(ui_window_t *win, ui_widget_t w);
 int ui_widgetclicked(ui_window_t *win, int i);
 int ui_add(ui_window_t *win, ui_widget_t w);
 void ui_clear(ui_window_t *win, unsigned long color);
+void ui_basictheme(ui_theme_t *t);
 // widgets
 ui_widget_t ui_rectc(int w, int h, long color);
 ui_widget_t ui_rect4(int x, int y, int w, int h);

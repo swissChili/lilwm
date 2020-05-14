@@ -30,7 +30,7 @@ void ui_setwindow(ui_window_t *win)
 	XMapWindow(win->dpy, win->win);
 }
 
-ui_window_t ui_window(int width, int height)
+ui_window_t ui_window(int width, int height, ui_theme_t theme)
 {
 	ui_window_t win;
 	Display *dpy = XOpenDisplay(NULL);
@@ -54,6 +54,7 @@ ui_window_t ui_window(int width, int height)
 	win.win = w;
 	win.row.len = 0;
 	win.buflen = 0;
+	win.theme = theme;
 
 	win.im = XOpenIM(dpy, NULL, NULL, NULL);
 	win.ic =
@@ -114,6 +115,11 @@ int ui_widgetclicked(ui_window_t *win, int i)
 	if (i >= win->row.len)
 		return 0;
 	return ui_isclicked(win, win->row.wdgts[i]);
+}
+
+int ui_keypressed(ui_window_t *win, char *key)
+{
+	return win->keysym == XStringToKeysym(key);
 }
 
 int ui_isclicked(ui_window_t *win, ui_widget_t w)
@@ -315,4 +321,16 @@ void ui_loop(ui_rendererloop_t rl)
 	}
 	// TODO: Close displays (or even better, only open one)
 	// XCloseDisplay(win->dpy);
+}
+
+void ui_basictheme(ui_theme_t *t)
+{
+	t->c[UI_BG] = RGB(255, 255, 255);
+	t->c[UI_FG] = RGB(0, 0, 0);
+	t->c[UI_PRIMARY] = RGB(89, 127, 249);
+	t->c[UI_PRIMARY_ACCENT] = RGB(75, 112, 234);
+	t->c[UI_LIGHT] = RGB(211, 214, 226);
+	t->c[UI_LIGHT_ACCENT] = RGB(188, 194, 214);
+	t->c[UI_DARK] = RGB(19, 20, 25);
+	t->c[UI_DARK_ACCENT] = RGB(26, 28, 35);
 }

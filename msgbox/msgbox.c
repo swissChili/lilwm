@@ -43,7 +43,9 @@ int main(int argc, char **argv)
 	{
 		msg = "Provide your message as the first argument to msgbox.";
 	}
-	ui_window_t win = ui_window(MAX(strlen(msg) * 6 + 24, 120), 75);
+	ui_theme_t theme;
+	ui_basictheme(&theme);
+	ui_window_t win = ui_window(MAX(strlen(msg) * 6 + 24, 120), 75, theme);
 	ui_setwindow(&win);
 	ui_loop(draw);
 }

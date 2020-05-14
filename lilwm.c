@@ -10,7 +10,7 @@
 
 #define XKEY(dpy, k) XKeysymToKeycode(dpy, XStringToKeysym(k))
 
-#define MOD Mod4Mask
+#define MOD Mod1Mask
 
 int kv_xkey(Display *dpy, item_t i, char *q, char *undef)
 {

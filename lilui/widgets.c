@@ -4,7 +4,7 @@
 
 void ui_bldrect(ui_window_t *win, ui_widget_t w)
 {
-	ui_fg(win, w.color);
+	ui_fg(win, win->theme.c[w.theme_color]);
 	XFillRectangle(win->dpy, win->win, win->gc, w.x, w.y, w.w, w.h);
 }
 
@@ -15,7 +15,7 @@ ui_widget_t ui_rect(int w, int h)
 		.y = -1,
 		.w = w,
 		.h = h,
-		.color = RGB(0, 0, 20),
+		.theme_color = UI_DARK,
 		.bld = ui_bldrect,
 	};
 }
@@ -27,14 +27,14 @@ ui_widget_t ui_rect4(int x, int y, int w, int h)
 		.y = y,
 		.w = w,
 		.h = h,
-		.color = RGB(0, 0, 20),
+		.theme_color = UI_DARK,
 		.bld = ui_bldrect,
 	};
 }
 
 void ui_bldtext(ui_window_t *win, ui_widget_t t)
 {
-	ui_fg(win, t.color);
+	ui_fg(win, win->theme.c[t.theme_color]);
 	char *s = t.data;
 	// printf("Drawing text %s at %d, %d\n", t.data, t.x, t.y);
 	XDrawString(win->dpy, win->win, win->gc, t.x, t.y + 20, s, strlen(s));
@@ -47,7 +47,7 @@ ui_widget_t ui_text(char *text)
 		.y = -1,
 		.w = strlen(text) * 6, // TODO: make less shit
 		.h = 32,
-		.color = RGB(0, 0, 0),
+		.theme_color = UI_FG,
 		.data = (void *)text,
 		.bld = ui_bldtext,
 	};
@@ -55,10 +55,10 @@ ui_widget_t ui_text(char *text)
 
 void ui_bldbtn(ui_window_t *win, ui_widget_t b)
 {
-	b.color = RGB(50, 154, 229);
+	b.theme_color = UI_PRIMARY;
 	ui_bldrect(win, b);
 	b.x += 8;
-	b.color = RGB(255, 255, 255);
+	b.theme_color = UI_FG;
 	ui_bldtext(win, b);
 }
 
@@ -151,17 +151,17 @@ void ui_bldinputstr(ui_window_t *win, ui_widget_t i)
 	}
 
 	puts("setting rect color");
-	i.color = RGB(220, 250, 250);
+	i.theme_color = UI_LIGHT_ACCENT;
 	ui_bldrect(win, i);
 	i.x += 8;
-	i.color = RGB(0, 0, 0);
+	i.theme_color = UI_FG;
 	i.data = d->text;
 	ui_bldtext(win, i);
 	// draw a little cursor
 	if (d->focused)
 	{
 		ui_widget_t cursorw = ui_rect4(i.x + 6 * d->cursor, i.y + 10, 1, 12);
-		cursorw.color = RGB(0, 0, 0);
+		cursorw.theme_color = RGB(0, 0, 0);
 		cursorw.bld(win, cursorw);
 	}
 }
@@ -180,14 +180,14 @@ ui_widget_t ui_inputstr(ui_inputstr_data_t *data, int wlen)
 
 void ui_bldprogressbar(ui_window_t *win, ui_widget_t b)
 {
-	b.color = RGB(42, 48, 48);
+	b.theme_color = UI_DARK;
 	ui_bldrect(win, b);
 
 	double progress = *(double *)b.data;
 	int width = MIN(b.w, b.w * progress);
 	printf("progress bar at %f (%d)\n", progress, width);
 	b.w = width;
-	b.color = RGB(9, 145, 150);
+	b.theme_color = UI_PRIMARY;
 	ui_bldrect(win, b);
 }
 
