@@ -41,6 +41,7 @@ void draw(ui_window_t *w)
 	ui_add(inputrow, ui_inputstr(&text, -1));
 
 	int inputlen = strlen(text.text);
+	printf("input is '%s' (%d)\n", text.text, inputlen);
 
 	j = 0;
 	real_selected = 0;

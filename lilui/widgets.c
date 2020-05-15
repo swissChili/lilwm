@@ -116,6 +116,10 @@ void ui_bldinputstr(ui_window_t *win, ui_widget_t i)
 	}
 	if (d->focused)
 	{
+		// stupid, horrible hack to make the rest of the widgets update correctly.
+		if (win->keysym)
+			win->should_update = true;
+
 		if (win->keysym == XK_BackSpace)
 		{
 			if (strlen(d->text) > 0)
