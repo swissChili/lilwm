@@ -24,7 +24,7 @@ add_executable(listpicker
 target_link_libraries(listpicker lilui)
 
 add_executable(lilwm
-	lilwm.c config.c config.h)
+	lilwm/lilwm.c lilwm/config.c lilwm/config.h lilwm/tagged.h lilwm/tagged.c)
 target_link_libraries(lilwm libfastkv X11)
 
 install(TARGETS lilwm lilui msgbox listpicker
@@ -36,6 +36,6 @@ install(FILES lilwm.desktop
 	DESTINATION /usr/share/xsessions
 	PERMISSIONS WORLD_READ)
 
-install(FILES rundesktop pickdesktop
+install(FILES bin/rundesktop bin/pickdesktop
 	DESTINATION bin
 	PERMISSIONS WORLD_EXECUTE WORLD_READ)

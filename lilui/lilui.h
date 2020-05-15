@@ -138,6 +138,7 @@ typedef struct ui_window_t
 	int buflen;
 	KeySym keysym;
 	ui_theme_t theme;
+	bool dont_clear;
 } ui_window_t;
 
 typedef struct ui_ctx_t

@@ -16,11 +16,8 @@ void draw(ui_window_t *w)
 	static int real_selected = 0;
 	static ui_inputstr_data_t text = UI_INPUTSTR_DATA();
 
-	//printf("Currently selected %d out of %d\n", real_selected, numoptions);
-
 	if (ui_keypressed(w, "Return"))
 	{
-		//printf("returned and selected %d out of %d\n", real_selected, numoptions);
 		printf("%d\n", real_selected);
 		exit(0);
 	}
@@ -49,7 +46,7 @@ void draw(ui_window_t *w)
 	{
 		int dist = levenshtein(options[i], text.text);
 		int itemlen = strlen(options[i]);
-		//printf("levenshtein %s %s = %d\n", options[i], text.text, dist);
+		// printf("levenshtein %s %s = %d\n", options[i], text.text, dist);
 		if ((inputlen && itemlen >= inputlen &&
 			 dist < MIN(itemlen - inputlen + 1, 10)) ||
 			!inputlen)
@@ -59,7 +56,7 @@ void draw(ui_window_t *w)
 			{
 				color = UI_PRIMARY;
 				real_selected = i;
-				//printf("this is selected: %d\n", real_selected);
+				// printf("this is selected: %d\n", real_selected);
 			}
 
 			ui_widget_t btn_w = ui_btnc(options[i], color);

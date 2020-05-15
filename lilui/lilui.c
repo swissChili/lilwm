@@ -48,7 +48,13 @@ ui_window_t ui_window(char *name, int width, int height, ui_theme_t theme)
 	attrs.cursor = XCreateFontCursor(dpy, XC_arrow);
 	attrs.background_pixel = WhitePixel(dpy, scr);
 
-	Window w = XCreateWindow(dpy, RootWindow(dpy, scr), 100, 100, width, height,
+	XWindowAttributes root_attrs;
+	Window root = RootWindow(dpy, scr);
+	XGetWindowAttributes(dpy, root, &root_attrs);
+	int x = (root_attrs.width - width) / 2,
+		y = (root_attrs.height - height) / 2;
+
+	Window w = XCreateWindow(dpy, root, x, y, width, height,
 							 1, CopyFromParent, InputOutput, CopyFromParent,
 							 CWCursor | CWBackPixel, &attrs);
 
@@ -66,6 +72,7 @@ ui_window_t ui_window(char *name, int width, int height, ui_theme_t theme)
 	win.rows = UI_NEW_LIST(ui_row_t);
 	win.buflen = 0;
 	win.theme = theme;
+	win.dont_clear = false;
 
 	win.im = XOpenIM(dpy, NULL, NULL, NULL);
 	win.ic =
@@ -210,7 +217,9 @@ void ui_redraw(ui_window_t *win, ui_rendererloop_t rl)
 {
 	do
 	{
-		ui_clear(win, RGB(255, 255, 255));
+		// Used in WM
+		if (!win->dont_clear)
+			ui_clear(win, RGB(255, 255, 255));
 		win->should_update = false;
 		ui_start(win);
 		rl(win);
