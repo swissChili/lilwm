@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.13)
 
 project(lilwm C)
 
+include_directories(/usr/include/freetype2)
+find_package(X11 REQUIRED)
+
 include_directories(fastkv lilui)
 subdirs(fastkv)
 
@@ -9,7 +12,7 @@ add_library(lilui
 	lilui/lilui.h
 	lilui/lilui.c
 	lilui/widgets.c)
-target_link_libraries(lilui X11)
+target_link_libraries(lilui X11 Xft)
 
 add_executable(testlilui
 	test.c)
@@ -25,7 +28,7 @@ target_link_libraries(listpicker lilui)
 
 add_executable(lilwm
 	lilwm/lilwm.c lilwm/config.c lilwm/config.h lilwm/tagged.h lilwm/tagged.c)
-target_link_libraries(lilwm libfastkv X11)
+target_link_libraries(lilwm libfastkv X11 Xft)
 
 install(TARGETS lilwm lilui msgbox listpicker
 	RUNTIME DESTINATION bin

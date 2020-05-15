@@ -1,8 +1,8 @@
 #include "lilui.h"
 #include <X11/Xlib.h>
+#include <X11/keysym.h>
 #include <stdio.h>
 #include <string.h>
-#include <X11/keysym.h>
 
 void ui_bldrect(ui_window_t *win, ui_widget_t w)
 {
@@ -39,21 +39,32 @@ ui_widget_t ui_rect4(int x, int y, int w, int h)
 	};
 }
 
+#define TEXT_MARGIN 12
+
 void ui_bldtext(ui_window_t *win, ui_widget_t t)
 {
-	ui_fg(win, win->theme.c[t.theme_color]);
+	// ui_fg(win, win->theme.c[t.theme_color]);
 	char *s = t.data;
-	// //printf("Drawing text %s at %d, %d\n", t.data, t.x, t.y);
-	XDrawString(win->dpy, win->win, win->gc, t.x, t.y + 20, s, strlen(s));
+
+	XftColor xftcolor;
+	xftcolor.color.alpha = 0xFFFF;
+	xftcolor.color.red = 0;
+	xftcolor.color.green = 0;
+	xftcolor.color.blue = 0;
+
+	XftDrawStringUtf8(win->draw, &xftcolor, win->font, t.x + TEXT_MARGIN,
+					  t.y + (t.h - TEXT_MARGIN), s, strlen(s));
 }
 
-ui_widget_t ui_text(char *text)
+ui_widget_t ui_text(ui_window_t *win, char *text)
 {
+	XGlyphInfo ext = ui_glyphinfo(win, text, strlen(text));
+
 	return (ui_widget_t){
 		.x = -1,
 		.y = -1,
-		.w = strlen(text) * 6, // TODO: make less shit
-		.h = 32,
+		.w = ext.width + TEXT_MARGIN * 2,
+		.h = ext.height + TEXT_MARGIN * 2,
 		.theme_color = UI_FG,
 		.data = (void *)text,
 		.bld = ui_bldtext,
@@ -68,18 +79,18 @@ void ui_bldbtn(ui_window_t *win, ui_widget_t b)
 	ui_bldtext(win, b);
 }
 
-ui_widget_t ui_btnc(char *text, int c)
+ui_widget_t ui_btnc(ui_window_t *win, char *text, int c)
 {
-	ui_widget_t t = ui_text(text);
+	ui_widget_t t = ui_text(win, text);
 	t.w += 16;
 	t.theme_color = c;
 	t.bld = ui_bldbtn;
 	return t;
 }
 
-ui_widget_t ui_btn(char *text)
+ui_widget_t ui_btn(ui_window_t *win, char *text)
 {
-	return ui_btnc(text, UI_PRIMARY);
+	return ui_btnc(win, text, UI_PRIMARY);
 }
 
 void ui_bldnothing(ui_window_t *win, ui_widget_t w)
@@ -102,21 +113,22 @@ ui_widget_t ui_vspacer(int size)
 void ui_bldinputstr(ui_window_t *win, ui_widget_t i)
 {
 	ui_inputstr_data_t *d = (ui_inputstr_data_t *)i.data;
-	//printf("Currnet focus is %d\n", d->focused);
-	//printf("keysym: %d, Left: %d\n", win->keysym, XK_Left);
+	// printf("Currnet focus is %d\n", d->focused);
+	// printf("keysym: %d, Left: %d\n", win->keysym, XK_Left);
 	if (ui_isclicked(win, i))
 	{
-		//printf("Focused ui_inputstr\n");
+		// printf("Focused ui_inputstr\n");
 		d->focused = 1;
 	}
 	if (ui_clickedoff(win, i))
 	{
-		//printf("Clicked off ui_inputstr\n");
+		// printf("Clicked off ui_inputstr\n");
 		d->focused = 0;
 	}
 	if (d->focused)
 	{
-		// stupid, horrible hack to make the rest of the widgets update correctly.
+		// stupid, horrible hack to make the rest of the widgets update
+		// correctly.
 		if (win->keysym)
 			win->should_update = true;
 
@@ -131,13 +143,13 @@ void ui_bldinputstr(ui_window_t *win, ui_widget_t i)
 		}
 		else if (win->keysym == XK_Delete)
 		{
-			//printf("Deleting\n");
+			// printf("Deleting\n");
 			memmove(&d->text[d->cursor], &d->text[d->cursor + 1],
 					strlen(d->text) - d->cursor);
 		}
 		else if (win->keysym == XK_Left)
 		{
-			//printf("Cursor Left %d\n", d->cursor);
+			// printf("Cursor Left %d\n", d->cursor);
 			if (d->cursor > 0)
 				d->cursor--;
 		}
@@ -156,15 +168,15 @@ void ui_bldinputstr(ui_window_t *win, ui_widget_t i)
 		}
 		else if (win->buflen && d->len > strlen(d->text) + win->buflen)
 		{
-			//printf("appending to buffer %.*s\n", win->buflen, win->buf);
+			// printf("appending to buffer %.*s\n", win->buflen, win->buf);
 			win->buf[win->buflen] = 0;
-			//printf("buf is %s, %s\n", win->buf, d->text);
+			// printf("buf is %s, %s\n", win->buf, d->text);
 			strncat(d->text, win->buf, win->buflen);
 			d->cursor += win->buflen;
 		}
 	}
 
-	//puts("setting rect color");
+	// puts("setting rect color");
 	i.theme_color = UI_LIGHT_ACCENT;
 	ui_bldrect(win, i);
 	i.x += 8;
@@ -174,7 +186,9 @@ void ui_bldinputstr(ui_window_t *win, ui_widget_t i)
 	// draw a little cursor
 	if (d->focused)
 	{
-		ui_widget_t cursorw = ui_rect4(i.x + 6 * d->cursor, i.y + 10, 1, 12);
+		XGlyphInfo info = ui_glyphinfo(win, d->text, d->cursor);
+		int cursorx = info.width + 21;
+		ui_widget_t cursorw = ui_rect4(cursorx, i.y + 6, 2, 16);
 		cursorw.theme_color = RGB(0, 0, 0);
 		cursorw.bld(win, cursorw);
 	}
@@ -199,7 +213,7 @@ void ui_bldprogressbar(ui_window_t *win, ui_widget_t b)
 
 	double progress = *(double *)b.data;
 	int width = MIN(b.w, b.w * progress);
-	//printf("progress bar at %f (%d)\n", progress, width);
+	// printf("progress bar at %f (%d)\n", progress, width);
 	b.w = width;
 	b.theme_color = UI_PRIMARY;
 	ui_bldrect(win, b);

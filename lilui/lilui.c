@@ -54,8 +54,8 @@ ui_window_t ui_window(char *name, int width, int height, ui_theme_t theme)
 	int x = (root_attrs.width - width) / 2,
 		y = (root_attrs.height - height) / 2;
 
-	Window w = XCreateWindow(dpy, root, x, y, width, height,
-							 1, CopyFromParent, InputOutput, CopyFromParent,
+	Window w = XCreateWindow(dpy, root, x, y, width, height, 1, CopyFromParent,
+							 InputOutput, CopyFromParent,
 							 CWCursor | CWBackPixel, &attrs);
 
 	XStoreName(dpy, w, name);
@@ -73,6 +73,13 @@ ui_window_t ui_window(char *name, int width, int height, ui_theme_t theme)
 	win.buflen = 0;
 	win.theme = theme;
 	win.dont_clear = false;
+
+	// xft stuff
+	win.draw = XftDrawCreate(dpy, win.win, DefaultVisual(dpy, scr),
+							 DefaultColormap(dpy, scr));
+
+	win.font = XftFontOpen(dpy, scr, XFT_FAMILY, XftTypeString, theme.font,
+						   XFT_SIZE, XftTypeDouble, theme.font_size, NULL);
 
 	win.im = XOpenIM(dpy, NULL, NULL, NULL);
 	win.ic =
@@ -342,8 +349,17 @@ void ui_loop(ui_rendererloop_t rl)
 	// XCloseDisplay(win->dpy);
 }
 
+XGlyphInfo ui_glyphinfo(ui_window_t *win, char *text, int len)
+{
+	XGlyphInfo ext;
+	XftTextExtents8(win->dpy, win->font, text, len, &ext);
+	return ext;
+}
+
 void ui_basictheme(ui_theme_t *t)
 {
+	t->font = "Inter";
+	t->font_size = 12.0;
 	t->c[UI_BG] = RGB(255, 255, 255);
 	t->c[UI_FG] = RGB(0, 0, 0);
 	t->c[UI_PRIMARY] = RGB(89, 127, 249);

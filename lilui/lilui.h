@@ -2,6 +2,7 @@
 
 #include "list.h"
 #include <X11/Xlib.h>
+#include <X11/Xft/Xft.h>
 #include <stdbool.h>
 
 #define RGB(r, g, b) (b + (g << 8) + (r << 16))
@@ -108,6 +109,8 @@ typedef struct ui_theme_t
 			unsigned long light_accent;
 		} n;
 	};
+	char *font;
+	double font_size;
 } ui_theme_t;
 
 UI_DECL_LIST(ui_widget_t)
@@ -139,6 +142,8 @@ typedef struct ui_window_t
 	KeySym keysym;
 	ui_theme_t theme;
 	bool dont_clear;
+	XftDraw *draw;
+	XftFont *font;
 } ui_window_t;
 
 typedef struct ui_ctx_t
@@ -177,13 +182,14 @@ ui_widget_t *ui_add(ui_row_t *r, ui_widget_t w);
 void ui_clear(ui_window_t *win, unsigned long color);
 void ui_basictheme(ui_theme_t *t);
 int ui_keypressed(ui_window_t *win, char *key);
+XGlyphInfo ui_glyphinfo(ui_window_t *win, char *text, int len);
 // widgets
 ui_widget_t ui_rectc(int w, int h, int color);
 ui_widget_t ui_rect4(int x, int y, int w, int h);
 ui_widget_t ui_rect(int w, int h);
-ui_widget_t ui_text(char *text);
-ui_widget_t ui_btnc(char *text, int color);
-ui_widget_t ui_btn(char *text);
+ui_widget_t ui_text(ui_window_t *win, char *text);
+ui_widget_t ui_btnc(ui_window_t *win, char *text, int color);
+ui_widget_t ui_btn(ui_window_t *win, char *text);
 ui_widget_t ui_progressbar(double *progress, int wlen);
 ui_widget_t ui_inputstr(ui_inputstr_data_t *data, int widget_len);
 ui_widget_t ui_hspacer(int size);
