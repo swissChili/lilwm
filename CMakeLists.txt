@@ -12,7 +12,7 @@ add_library(lilui
 	lilui/lilui.h
 	lilui/lilui.c
 	lilui/widgets.c)
-target_link_libraries(lilui X11 Xft)
+target_link_libraries(lilui X11 Xft libfastkv)
 
 add_executable(testlilui
 	test.c)
@@ -42,3 +42,11 @@ install(FILES lilwm.desktop
 install(FILES bin/rundesktop bin/pickdesktop
 	DESTINATION bin
 	PERMISSIONS WORLD_EXECUTE WORLD_READ)
+
+# install(FILES lilwmrc
+#	DESTINATION /etc/lilwm/
+#	PERMISSIONS world_read)
+
+install(FILES lilui/basictheme.res
+	DESTINATION /etc/lilui/
+	PERMISSIONS WORLD_READ)

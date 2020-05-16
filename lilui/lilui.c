@@ -1,6 +1,7 @@
 #include "lilui.h"
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
+#include <fastkv.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -358,14 +359,121 @@ XGlyphInfo ui_glyphinfo(ui_window_t *win, char *text, int len)
 
 void ui_basictheme(ui_theme_t *t)
 {
-	t->font = "Inter";
-	t->font_size = 12.0;
-	t->c[UI_BG] = RGB(255, 255, 255);
-	t->c[UI_FG] = RGB(0, 0, 0);
-	t->c[UI_PRIMARY] = RGB(89, 127, 249);
-	t->c[UI_PRIMARY_ACCENT] = RGB(75, 112, 234);
-	t->c[UI_LIGHT] = RGB(211, 214, 226);
-	t->c[UI_LIGHT_ACCENT] = RGB(188, 194, 214);
-	t->c[UI_DARK] = RGB(19, 20, 25);
-	t->c[UI_DARK_ACCENT] = RGB(26, 28, 35);
+	char *lilui_theme = getenv("LILUI_THEME");
+	if (lilui_theme)
+	{
+		ui_parsetheme(lilui_theme, t);
+	}
+	else
+	{
+		t->font = "Helvetica";
+		t->font_size = 12.0;
+		t->c[UI_BG] = RGB(255, 255, 255);
+		t->c[UI_FG] = RGB(0, 0, 0);
+		t->c[UI_PRIMARY] = RGB(89, 127, 249);
+		t->c[UI_PRIMARY_ACCENT] = RGB(75, 112, 234);
+		t->c[UI_LIGHT] = RGB(211, 214, 226);
+		t->c[UI_LIGHT_ACCENT] = RGB(188, 194, 214);
+		t->c[UI_DARK] = RGB(19, 20, 25);
+		t->c[UI_DARK_ACCENT] = RGB(26, 28, 35);
+	}
+}
+
+unsigned long ui_kv2rgb(item_t v)
+{
+	if (v.type != TYPE_STRING)
+		return 0;
+
+	unsigned short r, g, b;
+
+	if (sscanf(v.string, "%hd %hd %hd", &r, &g, &b) != 3)
+		return 0;
+
+	return RGB(r, g, b);
+}
+
+double ui_kv2double(item_t v)
+{
+	if (v.type != TYPE_STRING)
+		return 0;
+
+	return strtod(v.string, NULL);
+}
+
+#define CLR(name, val)                                                         \
+	if (strcmp(k, #name) == 0)                                                 \
+	{                                                                          \
+		printf(#name " is %lu\n", ui_kv2rgb(v));                                \
+		theme->c[val] = ui_kv2rgb(v);                                          \
+	}
+
+void ui_parsetheme(const char *file, ui_theme_t *theme)
+{
+	FILE *in = fopen(file, "r");
+	if (in == NULL)
+		return;
+	fseek(in, 0, SEEK_END);
+	uint64_t size = ftell(in);
+	fseek(in, 0, SEEK_SET);
+
+	char *text = malloc(size + 1);
+	(void)fread(text, 1, size, in);
+	text[size] = 0;
+
+	fclose(in);
+
+	uint64_t i = 0;
+
+	vars_t defines = {
+		.length = 0,
+		.vars = (char *[]){NULL},
+	};
+
+	item_t t = kv_parse(text, &i, size, defines);
+
+	if (t.type != TYPE_OBJECT)
+		return;
+
+	theme->theme_source = UI_THEME_ENV;
+
+	for (int i = 0; i < t.length; i++)
+	{
+		char *k = t.object[i].key.string;
+		item_t v = t.object[i].value;
+
+		if (strcmp(k, "font") == 0 && v.type == TYPE_OBJECT)
+		{
+			item_t family = kv_get(v, "family");
+			item_t size = kv_get(v, "size");
+			if (family.type == TYPE_STRING)
+			{
+				theme->font = strdup(family.string);
+			}
+			if (size.type == TYPE_STRING)
+			{
+				theme->font_size = ui_kv2double(size);
+			}
+
+			printf("font %s @ %f\n", theme->font, theme->font_size);
+		}
+		else
+			CLR(background, UI_BG)
+		else CLR(foreground, UI_FG)
+		else CLR(primary, UI_PRIMARY)
+		else CLR(primary_accent, UI_PRIMARY_ACCENT)
+		else CLR(dark, UI_DARK)
+		else CLR(dark_accent, UI_DARK_ACCENT)
+		else CLR(light, UI_LIGHT)
+		else CLR(light_accent, UI_LIGHT_ACCENT)
+	}
+}
+
+#undef CLR
+
+void ui_freetheme(ui_theme_t *theme)
+{
+	if (theme->theme_source == UI_THEME_ENV)
+	{
+		free(theme->font);
+	}
 }

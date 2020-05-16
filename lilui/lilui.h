@@ -111,6 +111,11 @@ typedef struct ui_theme_t
 	};
 	char *font;
 	double font_size;
+	enum
+	{
+		UI_THEME_CUSTOM = 0,
+		UI_THEME_ENV,
+	} theme_source;
 } ui_theme_t;
 
 UI_DECL_LIST(ui_widget_t)
@@ -181,6 +186,8 @@ int ui_widgetclicked(ui_window_t *win, ui_widget_t *w);
 ui_widget_t *ui_add(ui_row_t *r, ui_widget_t w);
 void ui_clear(ui_window_t *win, unsigned long color);
 void ui_basictheme(ui_theme_t *t);
+void ui_parsetheme(const char *file, ui_theme_t *t);
+void ui_freetheme(ui_theme_t *t);
 int ui_keypressed(ui_window_t *win, char *key);
 XGlyphInfo ui_glyphinfo(ui_window_t *win, char *text, int len);
 // widgets
