@@ -25,7 +25,7 @@ void ui_init(ui_window_t *win)
 void ui_start(ui_window_t *win)
 {
 	win->x = 0;
-	win->y = 0;
+	win->y = win->scroll;
 	for (int i = 0; i < win->rows.len; i++)
 	{
 		ui_row_t *current = UI_NTH(win->rows, ui_row_t, i);
@@ -66,7 +66,9 @@ ui_window_t ui_window(char *name, int width, int height, ui_theme_t theme)
 		fprintf(stderr, "Could not open X display\n");
 		exit(EXIT_FAILURE);
 	}
-	XSelectInput(dpy, w, ExposureMask | KeyPressMask | ButtonPressMask);
+	XSelectInput(dpy, w,
+				 ExposureMask | KeyPressMask | ButtonPressMask |
+					 PointerMotionMask);
 	win.dpy = dpy;
 	win.scr = scr;
 	win.win = w;
@@ -74,6 +76,7 @@ ui_window_t ui_window(char *name, int width, int height, ui_theme_t theme)
 	win.buflen = 0;
 	win.theme = theme;
 	win.dont_clear = false;
+	win.scroll = 0;
 
 	// xft stuff
 	win.draw = XftDrawCreate(dpy, win.win, DefaultVisual(dpy, scr),
@@ -158,15 +161,30 @@ int ui_clickedoff(ui_window_t *win, ui_widget_t w)
 	return !ui_isclicked(win, w);
 }
 
+void ui_drawscrollbar(ui_window_t *win, int start, int height)
+{
+	int width = 12;
+	XWindowAttributes a;
+	XGetWindowAttributes(win->dpy, win->win, &a);
+	ui_fg(win, win->theme.n.light);
+	XFillRectangle(win->dpy, win->win, win->gc, a.width - width, 0, width,
+				   a.height);
+	ui_fg(win, win->theme.n.light_accent);
+	XFillRectangle(win->dpy, win->win, win->gc, a.width - width, start, width,
+				   height);
+}
+
 void ui_pack(ui_window_t *win)
 {
 	XWindowAttributes a;
 	XGetWindowAttributes(win->dpy, win->win, &a);
 
+	int w = a.width, h = a.height, // window size
+		r_h = 0;				   // combined height of all rows
+
 	for (int r = 0; r < win->rows.len; r++)
 	{
-		int w = a.width, h = a.height,
-			w_w = 0,		// combined width of all widgets
+		int w_w = 0,		// combined width of all widgets
 			w_h = 0,		// combined height of all widgets
 			flex_num_w = 0, // proportional flexible space
 			flex_num_h = 0, max_h = 0;
@@ -199,8 +217,17 @@ void ui_pack(ui_window_t *win)
 
 		win->x = 0;
 		win->y += max_h;
+		r_h += w_h;
 	}
-	// //printf("Packed, y is now %d\n", g_y);
+
+	// Draw a scroll bar
+	double amt_shown = (double)h / (double)r_h;
+	int bar_height = h * amt_shown;
+
+	int starts_at = ((double)-win->scroll / (double)r_h) * h;
+	printf("Scroll bar starts at %d, until %d\n", starts_at, bar_height);
+	if (amt_shown < 1)
+		ui_drawscrollbar(win, starts_at, bar_height);
 }
 
 ui_widget_t *ui_add(ui_row_t *r, ui_widget_t w)
@@ -282,12 +309,44 @@ int ui_windowevent(XEvent e, ui_window_t *win, ui_rendererloop_t rl)
 			return 0;
 		}
 
-		if (e.xbutton.button >= 1 && e.xbutton.button <= 3)
+		printf("button pressed %d\n", e.xbutton.button);
+
+		if (e.xbutton.button == Button4 || e.xbutton.button == Button5)
 		{
-			// printf("Mouse clicked %d\n", e.xbutton.button);
+			win->scroll_startev = e.xbutton;
+			win->scroll_startpos = win->scroll;
+			win->scroll =
+				MIN(0, win->scroll + (e.xbutton.button == Button4 ? 5 : -5));
+			printf("Scroll %d\n", win->scroll);
+		}
+
+		if (e.xbutton.button == Button1 || e.xbutton.button == Button2 ||
+			e.xbutton.button == Button3)
+		{
 			int x = e.xbutton.x, y = e.xbutton.y;
 			win->evt = (ui_mouseevent_t){
 				.evt = UI_MOUSE_DOWN,
+				.type = e.xbutton.button,
+				.x = x,
+				.y = y,
+			};
+		}
+
+		ui_redraw(win, rl);
+	}
+	else if (e.type == ButtonRelease)
+	{
+		if (e.xbutton.button == Button1 || e.xbutton.button == Button2 ||
+			e.xbutton.button == Button3)
+		{
+			if (e.xbutton.window != win->win)
+			{
+				return 0;
+			}
+
+			int x = e.xbutton.x, y = e.xbutton.y;
+			win->evt = (ui_mouseevent_t){
+				.evt = UI_MOUSE_UP,
 				.type = e.xbutton.button,
 				.x = x,
 				.y = y,
@@ -296,22 +355,21 @@ int ui_windowevent(XEvent e, ui_window_t *win, ui_rendererloop_t rl)
 			ui_redraw(win, rl);
 		}
 	}
-	else if (e.type == ButtonRelease)
+	else if (e.type == MotionNotify)
 	{
-		if (e.xbutton.window != win->win)
+		// Scrolling
+		if (e.xbutton.button == Button4 || e.xbutton.button == Button5)
 		{
-			return 0;
+			int s_x = win->scroll_startev.x, // start x
+				s_y = win->scroll_startev.y, // start y
+				s_s = win->scroll_startpos,	 // start scroll
+				x_diff = e.xbutton.x - s_x,	 // x difference
+				y_diff = e.xbutton.y - s_y;	 // y difference
+
+			win->scroll = s_s + y_diff;
+
+			ui_redraw(win, rl);
 		}
-
-		int x = e.xbutton.x, y = e.xbutton.y;
-		win->evt = (ui_mouseevent_t){
-			.evt = UI_MOUSE_UP,
-			.type = e.xbutton.button,
-			.x = x,
-			.y = y,
-		};
-
-		ui_redraw(win, rl);
 	}
 	else
 	{
@@ -403,7 +461,7 @@ double ui_kv2double(item_t v)
 #define CLR(name, val)                                                         \
 	if (strcmp(k, #name) == 0)                                                 \
 	{                                                                          \
-		printf(#name " is %lu\n", ui_kv2rgb(v));                                \
+		printf(#name " is %lu\n", ui_kv2rgb(v));                               \
 		theme->c[val] = ui_kv2rgb(v);                                          \
 	}
 
@@ -458,13 +516,12 @@ void ui_parsetheme(const char *file, ui_theme_t *theme)
 		}
 		else
 			CLR(background, UI_BG)
-		else CLR(foreground, UI_FG)
-		else CLR(primary, UI_PRIMARY)
-		else CLR(primary_accent, UI_PRIMARY_ACCENT)
-		else CLR(dark, UI_DARK)
-		else CLR(dark_accent, UI_DARK_ACCENT)
-		else CLR(light, UI_LIGHT)
-		else CLR(light_accent, UI_LIGHT_ACCENT)
+		else CLR(foreground, UI_FG) else CLR(primary, UI_PRIMARY) else CLR(primary_accent, UI_PRIMARY_ACCENT) else CLR(
+			dark,
+			UI_DARK) else CLR(dark_accent,
+							  UI_DARK_ACCENT) else CLR(light,
+													   UI_LIGHT) else CLR(light_accent,
+																		  UI_LIGHT_ACCENT)
 	}
 }
 

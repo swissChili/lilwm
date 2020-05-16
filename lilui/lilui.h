@@ -141,6 +141,9 @@ typedef struct ui_window_t
 	GC gc;
 	ui_rowlist_t rows;
 	int x, y;
+	int scroll;
+	XButtonEvent scroll_startev;
+	int scroll_startpos;
 	bool should_update;
 	char buf[UI_MAX_BUF_LEN];
 	int buflen;
