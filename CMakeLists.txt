@@ -27,7 +27,8 @@ add_executable(listpicker
 target_link_libraries(listpicker lilui)
 
 add_executable(lilwm
-	lilwm/lilwm.c lilwm/config.c lilwm/config.h lilwm/tagged.h lilwm/tagged.c)
+	lilwm/lilwm.c lilwm/config.c lilwm/config.h lilwm/tagged.h lilwm/tagged.c
+	lilwm/keys.h lilwm/keys.c)
 target_link_libraries(lilwm libfastkv X11 Xft)
 
 install(TARGETS lilwm lilui msgbox listpicker

@@ -164,12 +164,19 @@ int ui_clickedoff(ui_window_t *win, ui_widget_t w)
 void ui_drawscrollbar(ui_window_t *win, int start, int height)
 {
 	int width = 12;
+	int margin = 2;
 	XWindowAttributes a;
 	XGetWindowAttributes(win->dpy, win->win, &a);
+	// border
+	ui_fg(win, win->theme.n.bg);
+	XFillRectangle(win->dpy, win->win, win->gc, a.width - width - margin, 0,
+				   margin, a.height);
 	ui_fg(win, win->theme.n.light);
+	// bg
 	XFillRectangle(win->dpy, win->win, win->gc, a.width - width, 0, width,
 				   a.height);
 	ui_fg(win, win->theme.n.light_accent);
+	// bar
 	XFillRectangle(win->dpy, win->win, win->gc, a.width - width, start, width,
 				   height);
 }
@@ -225,7 +232,6 @@ void ui_pack(ui_window_t *win)
 	int bar_height = h * amt_shown;
 
 	int starts_at = ((double)-win->scroll / (double)r_h) * h;
-	printf("Scroll bar starts at %d, until %d\n", starts_at, bar_height);
 	if (amt_shown < 1)
 		ui_drawscrollbar(win, starts_at, bar_height);
 }
@@ -309,15 +315,15 @@ int ui_windowevent(XEvent e, ui_window_t *win, ui_rendererloop_t rl)
 			return 0;
 		}
 
-		printf("button pressed %d\n", e.xbutton.button);
-
 		if (e.xbutton.button == Button4 || e.xbutton.button == Button5)
 		{
 			win->scroll_startev = e.xbutton;
 			win->scroll_startpos = win->scroll;
+			// At top and scrolling up
+			if (win->scroll == 0 && e.xbutton.button == Button4)
+				return 0;
 			win->scroll =
 				MIN(0, win->scroll + (e.xbutton.button == Button4 ? 5 : -5));
-			printf("Scroll %d\n", win->scroll);
 		}
 
 		if (e.xbutton.button == Button1 || e.xbutton.button == Button2 ||

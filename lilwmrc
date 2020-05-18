@@ -15,12 +15,12 @@ tile
 // Key bindings
 keys
 {
-	Return	"newterm"
-	q		"quit"
-	w		"closewin"
-	Right	"tile right"
-	Left	"tile left"
-	space	"shell pickdesktop"
+	"alt Return"	"newterm"
+	"alt q"			"quit"
+	"alt w"			"closewin"
+	"alt Right"		"tile right"
+	"alt Left"		"tile left"
+	"alt space"		"shell pickdesktop"
 }
 
 // Default applications

@@ -13,6 +13,7 @@ void draw(ui_window_t *w)
 	ui_add(msgrow, ui_hspacer(-1));
 	ui_add(msgrow, ui_text(w, msg));
 	ui_add(msgrow, ui_hspacer(-1));
+	ui_add(msgrow, ui_vspacer(-1));
 
 	ui_row_t *btnrow = ui_row(w);
 	ui_add(btnrow, ui_hspacer(-1));
@@ -45,7 +46,7 @@ int main(int argc, char **argv)
 	}
 	ui_theme_t theme;
 	ui_basictheme(&theme);
-	ui_window_t win = ui_window("Message Box", MAX(strlen(msg) * 6 + 24, 120), 75, theme);
+	ui_window_t win = ui_window("Message Box", 360, 120, theme);
 	ui_setwindow(&win);
 	ui_loop(draw);
 }

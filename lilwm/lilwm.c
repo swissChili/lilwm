@@ -1,4 +1,5 @@
 #include "config.h"
+#include "keys.h"
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <stdio.h>
@@ -71,9 +72,10 @@ int main(int argc, char **argv)
 		{
 			pair_t c = keys.object[i];
 			char *k = c.key.string;
+			wm_key_t key = wm_str2key(k);
 			printf("Grabbing key %s\n", k);
-			XGrabKey(dpy, XKEY(dpy, k), MOD, root, True, GrabModeAsync,
-					 GrabModeAsync);
+			XGrabKey(dpy, XKeysymToKeycode(dpy, key.keysym), key.mask, root,
+					 True, GrabModeAsync, GrabModeAsync);
 		}
 	}
 
@@ -96,70 +98,76 @@ int main(int argc, char **argv)
 	// run autorun script
 	exec_autorun(cfg);
 
-	XSetInputFocus(dpy, root, RevertToParent, CurrentTime);
+	// XSetInputFocus(dpy, root, RevertToParent, CurrentTime);
 
 	for (;;)
 	{
 		XNextEvent(dpy, &ev);
+
 		if (ev.type == KeyPress)
 		{
-			char *k = XKeysymToString(XLookupKeysym(&ev.xkey, 0));
-			printf("Key pressed %s\n", k);
+			KeySym ks = XLookupKeysym(&ev.xkey, 0);
+			wm_key_t k;
+			k.keysym = ks;
+			k.mask = ev.xkey.state;
 
-			item_t cmd = kv_get(keys, k);
-			kv_printitem(cmd, 1);
-			if (cmd.type == TYPE_STRING)
+			for (int i = 0; i < keys.length; i++)
 			{
-				// run this command
-				if (strcmp(cmd.string, "focus") == 0 &&
-					ev.xkey.subwindow != None)
+				wm_key_t itemkey = wm_str2key(keys.object[i].key.string);
+				item_t cmd = keys.object[i].value;
+				if (cmd.type == TYPE_STRING && wm_keyeq(itemkey, k))
 				{
-					XRaiseWindow(dpy, ev.xkey.subwindow);
-				}
-				else if (strcmp(cmd.string, "newterm") == 0)
-				{
-					runcmd(termcmd);
-				}
-				else if (strcmp(cmd.string, "closewin") == 0 &&
-						 ev.xkey.subwindow != None)
-				{
-					XDestroyWindow(dpy, ev.xkey.subwindow);
-				}
-				else if (strcmp(cmd.string, "quit") == 0)
-				{
-					int quit =
-						system("msgbox 'Are you sure you want to quit lilwm?'");
-					if (!quit)
-						goto finish;
-				}
-				else if (strncmp(cmd.string, "tile", 4) == 0 &&
-						 ev.xkey.subwindow != None)
-				{
-					char side[12];
-					if (sscanf(cmd.string, "tile %s", side))
+					// run this command
+					if (strcmp(cmd.string, "focus") == 0 &&
+						ev.xkey.subwindow != None)
 					{
-						XWindowAttributes attrs;
-						XGetWindowAttributes(dpy, root, &attrs);
-						if (strcmp(side, "right") == 0)
+						XRaiseWindow(dpy, ev.xkey.subwindow);
+					}
+					else if (strcmp(cmd.string, "newterm") == 0)
+					{
+						runcmd(termcmd);
+					}
+					else if (strcmp(cmd.string, "closewin") == 0 &&
+							 ev.xkey.subwindow != None)
+					{
+						XDestroyWindow(dpy, ev.xkey.subwindow);
+					}
+					else if (strcmp(cmd.string, "quit") == 0)
+					{
+						int quit = system(
+							"msgbox 'Are you sure you want to quit lilwm?'");
+						if (!quit)
+							goto finish;
+					}
+					else if (strncmp(cmd.string, "tile", 4) == 0 &&
+							 ev.xkey.subwindow != None)
+					{
+						char side[12];
+						if (sscanf(cmd.string, "tile %s", side))
 						{
-							XMoveResizeWindow(
-								dpy, ev.xkey.subwindow,
-								(attrs.width / 2) + tile_gap / 2, tile_gap,
-								(attrs.width / 2) - 1.5 * tile_gap,
-								attrs.height - 2 * tile_gap);
-						}
-						else if (strcmp(side, "left") == 0)
-						{
-							XMoveResizeWindow(
-								dpy, ev.xkey.subwindow, tile_gap, tile_gap,
-								(attrs.width / 2) - 1.5 * tile_gap,
-								attrs.height - 2 * tile_gap);
+							XWindowAttributes attrs;
+							XGetWindowAttributes(dpy, root, &attrs);
+							if (strcmp(side, "right") == 0)
+							{
+								XMoveResizeWindow(
+									dpy, ev.xkey.subwindow,
+									(attrs.width / 2) + tile_gap / 2, tile_gap,
+									(attrs.width / 2) - 1.5 * tile_gap,
+									attrs.height - 2 * tile_gap);
+							}
+							else if (strcmp(side, "left") == 0)
+							{
+								XMoveResizeWindow(
+									dpy, ev.xkey.subwindow, tile_gap, tile_gap,
+									(attrs.width / 2) - 1.5 * tile_gap,
+									attrs.height - 2 * tile_gap);
+							}
 						}
 					}
-				}
-				else if (strncmp(cmd.string, "shell", 5) == 0)
-				{
-					runcmd(cmd.string + 5);
+					else if (strncmp(cmd.string, "shell", 5) == 0)
+					{
+						runcmd(cmd.string + 5);
+					}
 				}
 			}
 		}
@@ -169,6 +177,8 @@ int main(int argc, char **argv)
 						 PointerMotionMask | ButtonReleaseMask, GrabModeAsync,
 						 GrabModeAsync, None, None, CurrentTime);
 			XRaiseWindow(dpy, ev.xbutton.subwindow);
+			// XSetInputFocus(dpy, ev.xbutton.subwindow, RevertToParent,
+			// CurrentTime);
 
 			XGetWindowAttributes(dpy, ev.xbutton.subwindow, &attr);
 			start = ev.xbutton;
@@ -195,6 +205,8 @@ int main(int argc, char **argv)
 	}
 
 finish:
+	// nuke everything
+	XDestroySubwindows(dpy, root);
 	if (dpy)
 		XCloseDisplay(dpy);
 

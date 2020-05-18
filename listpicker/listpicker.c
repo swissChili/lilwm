@@ -60,18 +60,7 @@ void draw(ui_window_t *w)
 
 			ui_widget_t btn_w = ui_btnc(w, options[i], color);
 			btn_w.w = -1;
-			ui_widget_t *btn = ui_add(ui_row(w), btn_w);
-			if (ui_widgetclicked(w, btn))
-			{
-				if (selected == j)
-				{
-					printf("%d\n", i);
-					exit(0);
-				}
-				selected = j;
-				real_selected = i;
-				w->should_update = true;
-			}
+			ui_add(ui_row(w), btn_w);
 			j++;
 		}
 	}
